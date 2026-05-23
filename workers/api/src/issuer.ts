@@ -34,14 +34,16 @@ export interface Money {
   currency: string;
 }
 
+export interface MandateScope {
+  categories: string[];
+  max_per_tx: Money;
+  merchant_whitelist: string[];
+}
+
 export interface MintTemplateOpts {
   /** Seconds from now until the template expires. Negative => already expired. */
   ttlSeconds?: number;
-  scope?: {
-    categories: string[];
-    max_per_tx: Money;
-    merchant_whitelist: string[];
-  };
+  scope?: MandateScope;
 }
 
 export interface MintedTemplate {

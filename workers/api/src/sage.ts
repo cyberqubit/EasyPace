@@ -9,7 +9,7 @@
  * matching otherwise — so the feature always works, and gets smarter with the
  * token. The verifier is always the real @agnic/mandate-verifier.
  */
-import { mintTemplate, mintDerivation, type Money } from './issuer.js';
+import { mintTemplate, mintDerivation, type Money, type MandateScope } from './issuer.js';
 import { verifyBundle } from './verify.js';
 import { MARGARET_SCOPE, MERCHANT_LABELS, type Env } from './config.js';
 
@@ -132,7 +132,7 @@ function sageReply(code: string, intent: SageIntent): string {
   }
 }
 
-export async function askSage(env: Env, transcript: string, offline = false, userToken?: string): Promise<SageAnswer> {
+export async function askSage(env: Env, transcript: string, offline = false, userToken?: string, scope?: MandateScope): Promise<SageAnswer> {
   const { intent, parsedBy } = await parseIntent(env, transcript, userToken);
 
   if (!intent.understood) {
@@ -144,7 +144,7 @@ export async function askSage(env: Env, transcript: string, offline = false, use
     };
   }
 
-  const tpl = await mintTemplate(env);
+  const tpl = await mintTemplate(env, scope ? { scope } : {});
   const der = await mintDerivation(env, {
     parentJti: tpl.jti,
     intent: { amount: intent.amount, merchant: intent.merchantId, categories: [intent.category] },

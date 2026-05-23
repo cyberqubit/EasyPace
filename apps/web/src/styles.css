@@ -83,6 +83,18 @@ p { margin: 0.4rem 0; }
 .merchants { list-style: none; padding: 0; margin: 0.5rem 0 0; }
 .merchants li { font-size: 1.1rem; padding: 0.15rem 0; }
 
+/* Permissions / setup panel */
+.setup { margin-top: 0.9rem; border-top: 2px solid var(--line); padding-top: 0.6rem; }
+.setup summary { font-size: 1.05rem; font-weight: 700; color: var(--brand); cursor: pointer; min-height: 44px; padding: 0.4rem 0; }
+.setup-body { display: grid; gap: 1rem; padding-top: 0.5rem; }
+.setup .field { display: grid; gap: 0.4rem; border: none; padding: 0; margin: 0; }
+.setup .field > span:first-child, .setup legend { font-size: 1.05rem; font-weight: 700; }
+.setup .money { font-size: 1.1rem; }
+.setup .money input { width: 5.5rem; font-size: 1.1rem; padding: 0.4rem 0.5rem; min-height: 48px; border: 2px solid var(--line); border-radius: 10px; }
+.setup .provider { display: flex; align-items: center; gap: 0.6rem; font-size: 1.05rem; min-height: 44px; }
+.setup .provider input { width: 26px; height: 26px; }
+.setup-note { font-size: 0.98rem; color: #3a4a40; font-style: italic; }
+
 /* Issuer status bar */
 .issuer-bar {
   display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;

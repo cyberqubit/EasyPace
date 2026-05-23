@@ -78,14 +78,20 @@ export interface Mandate {
   approvedMerchants: { id: string; label: string }[];
 }
 
+export type Scope = Mandate['scope'];
+
 export async function getMandate(): Promise<Mandate> {
   const res = await fetch(`${API_BASE}/api/mandate`);
   if (!res.ok) throw new Error('Could not load mandate');
   return res.json();
 }
 
-export async function runScenario(name: ScenarioName, offline: boolean): Promise<ScenarioResult> {
-  const res = await fetch(`${API_BASE}/api/demo/${name}${offline ? '?offline=true' : ''}`, { method: 'POST' });
+export async function runScenario(name: ScenarioName, offline: boolean, scope?: Scope): Promise<ScenarioResult> {
+  const res = await fetch(`${API_BASE}/api/demo/${name}${offline ? '?offline=true' : ''}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ scope }),
+  });
   if (!res.ok) throw new Error(`Scenario failed: ${name}`);
   return res.json();
 }
@@ -100,11 +106,11 @@ export interface AskResult {
   intent?: { merchantLabel: string; amount: { value: string; currency: string } };
 }
 
-export async function askSage(transcript: string, offline: boolean): Promise<AskResult> {
+export async function askSage(transcript: string, offline: boolean, scope?: Scope): Promise<AskResult> {
   const res = await fetch(`${API_BASE}/api/sage/ask${offline ? '?offline=true' : ''}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', ...authHeaders() },
-    body: JSON.stringify({ transcript }),
+    body: JSON.stringify({ transcript, scope }),
   });
   return res.json();
 }

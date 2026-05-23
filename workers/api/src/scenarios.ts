@@ -10,7 +10,7 @@
  *   expired       → rejection: authorization has expired
  *   impostor      → rejection: invalid issuer signature (forged mandate)
  */
-import { mintTemplate, mintDerivation } from './issuer.js';
+import { mintTemplate, mintDerivation, type MandateScope } from './issuer.js';
 import { verifyBundle, type VerifyOutcome } from './verify.js';
 import { MARGARET_SCOPE, type Env } from './config.js';
 
@@ -29,10 +29,11 @@ export interface ScenarioResult {
   result: VerifyOutcome;
 }
 
-export async function runScenario(env: Env, name: ScenarioName, offline = false): Promise<ScenarioResult> {
+export async function runScenario(env: Env, name: ScenarioName, offline = false, scope?: MandateScope): Promise<ScenarioResult> {
+  const tplOpts = scope ? { scope } : {};
   switch (name) {
     case 'approved': {
-      const tpl = await mintTemplate(env);
+      const tpl = await mintTemplate(env, tplOpts);
       const der = await mintDerivation(env, {
         parentJti: tpl.jti,
         intent: { amount: { value: '32.00', currency: 'CAD' }, merchant: 'sunrise-pharmacy', categories: ['pharmacy'] },
@@ -50,7 +51,7 @@ export async function runScenario(env: Env, name: ScenarioName, offline = false)
     }
 
     case 'scam-merchant': {
-      const tpl = await mintTemplate(env);
+      const tpl = await mintTemplate(env, tplOpts);
       const der = await mintDerivation(env, {
         parentJti: tpl.jti,
         intent: { amount: { value: '40.00', currency: 'CAD' }, merchant: 'cra-collections', categories: ['pharmacy'] },
@@ -68,7 +69,7 @@ export async function runScenario(env: Env, name: ScenarioName, offline = false)
     }
 
     case 'over-limit': {
-      const tpl = await mintTemplate(env);
+      const tpl = await mintTemplate(env, tplOpts);
       const der = await mintDerivation(env, {
         parentJti: tpl.jti,
         intent: { amount: { value: '200.00', currency: 'CAD' }, merchant: 'sunrise-pharmacy', categories: ['pharmacy'] },
@@ -86,7 +87,7 @@ export async function runScenario(env: Env, name: ScenarioName, offline = false)
     }
 
     case 'expired': {
-      const tpl = await mintTemplate(env);
+      const tpl = await mintTemplate(env, tplOpts);
       const der = await mintDerivation(env, {
         parentJti: tpl.jti,
         intent: { amount: { value: '32.00', currency: 'CAD' }, merchant: 'sunrise-pharmacy', categories: ['pharmacy'] },
@@ -105,7 +106,7 @@ export async function runScenario(env: Env, name: ScenarioName, offline = false)
     }
 
     case 'impostor': {
-      const tpl = await mintTemplate(env);
+      const tpl = await mintTemplate(env, tplOpts);
       const der = await mintDerivation(env, {
         parentJti: tpl.jti,
         intent: { amount: { value: '32.00', currency: 'CAD' }, merchant: 'sunrise-pharmacy', categories: ['pharmacy'] },

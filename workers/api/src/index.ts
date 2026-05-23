@@ -16,6 +16,22 @@ import { runScenario, SCENARIOS, type ScenarioName } from './scenarios.js';
 import { verifyBundle } from './verify.js';
 import { askSage } from './sage.js';
 import { auth, userTokenFromRequest } from './auth.js';
+import type { MandateScope } from './issuer.js';
+
+/** Validate a caller-supplied mandate scope (from the Permissions panel); else undefined → default. */
+function parseScope(raw: unknown): MandateScope | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const s = raw as Record<string, unknown>;
+  const cap = s.max_per_tx as { value?: unknown; currency?: unknown } | undefined;
+  if (!Array.isArray(s.categories) || !Array.isArray(s.merchant_whitelist) || !cap || typeof cap.value !== 'string') {
+    return undefined;
+  }
+  return {
+    categories: (s.categories as unknown[]).map(String),
+    merchant_whitelist: (s.merchant_whitelist as unknown[]).map(String),
+    max_per_tx: { value: String(cap.value), currency: String(cap.currency ?? 'CAD') },
+  };
+}
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -44,8 +60,10 @@ app.post('/api/demo/:scenario', async (c) => {
     return c.json({ error: `unknown scenario: ${scenario}`, scenarios: SCENARIOS }, 400);
   }
   const offline = c.req.query('offline') === 'true';
+  const body = await c.req.json().catch(() => ({}));
+  const scope = parseScope(body?.scope);
   try {
-    const result = await runScenario(c.env, scenario, offline);
+    const result = await runScenario(c.env, scenario, offline, scope);
     return c.json(result);
   } catch (err) {
     return c.json({ error: err instanceof Error ? err.message : 'scenario failed' }, 500);
@@ -59,7 +77,8 @@ app.post('/api/sage/ask', async (c) => {
   if (!transcript) return c.json({ understood: false, sageSays: 'I didn’t hear anything — please try again.', parsedBy: 'keywords' }, 400);
   try {
     const userToken = (await userTokenFromRequest(c)) ?? undefined;
-    return c.json(await askSage(c.env, transcript, offline, userToken));
+    const scope = parseScope(body?.scope);
+    return c.json(await askSage(c.env, transcript, offline, userToken, scope));
   } catch (err) {
     return c.json({ understood: false, sageSays: 'Something went wrong on my side — let’s try again.', error: err instanceof Error ? err.message : 'error', parsedBy: 'keywords' }, 500);
   }

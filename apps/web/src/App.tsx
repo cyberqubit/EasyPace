@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   getMandate, runScenario, askSage, CHECK_LABELS,
   authMe, signInUrl, logout, captureSession,
-  type Mandate, type ScenarioName, type VerifyOutcome, type Me,
+  type ScenarioName, type VerifyOutcome, type Me, type Scope,
 } from './api';
 import { speak, stopSpeaking, speechSupported, listen, sttSupported } from './speech';
 
@@ -16,6 +16,13 @@ const ACTIONS: Action[] = [
   { name: 'impostor', label: '🕵️  A fake agent tries to pay', hint: 'A forged permission' },
 ];
 
+const PROVIDERS = [
+  { id: 'sunrise-pharmacy', label: 'Sunrise Pharmacy' },
+  { id: 'fresh-grocer', label: 'Fresh Grocer' },
+  { id: 'city-hydro', label: 'City Hydro (utility bill)' },
+];
+const labelFor = (id: string) => PROVIDERS.find((p) => p.id === id)?.label ?? id;
+
 interface Display {
   sageSays: string;
   outcome?: 'approved' | 'blocked';
@@ -24,7 +31,7 @@ interface Display {
 }
 
 export function App() {
-  const [mandate, setMandate] = useState<Mandate | null>(null);
+  const [scope, setScope] = useState<Scope | null>(null);
   const [offline, setOffline] = useState(false);
   const [readAloud, setReadAloud] = useState(speechSupported);
   const [busy, setBusy] = useState(false);
@@ -34,7 +41,7 @@ export function App() {
   const [me, setMe] = useState<Me | null>(null);
 
   useEffect(() => {
-    getMandate().then(setMandate).catch(() => setError('Could not reach Sage. Is the verifier running?'));
+    getMandate().then((m) => setScope(m.scope)).catch(() => setError('Could not reach Sage. Is the verifier running?'));
     captureSession();
     authMe().then(setMe).catch(() => setMe({ signedIn: false }));
     const authErr = new URLSearchParams(location.search).get('auth_error');
@@ -54,7 +61,7 @@ export function App() {
   async function handleScenario(name: ScenarioName) {
     setBusy(true); setError(null); stopSpeaking();
     try {
-      const r = await runScenario(name, offline);
+      const r = await runScenario(name, offline, scope ?? undefined);
       show({ sageSays: r.sageSays, outcome: r.outcome, verify: r.result });
     } catch { setError('Something didn’t work — let’s try again.'); }
     finally { setBusy(false); }
@@ -75,7 +82,7 @@ export function App() {
     }
     setListening(false); setBusy(true);
     try {
-      const r = await askSage(transcript, offline);
+      const r = await askSage(transcript, offline, scope ?? undefined);
       show({ sageSays: r.sageSays, outcome: r.outcome, verify: r.result, transcript });
     } catch { setError('Something didn’t work — let’s try again.'); }
     finally { setBusy(false); }
@@ -108,13 +115,45 @@ export function App() {
         </div>
       </header>
 
-      {mandate && (
+      {scope && (
         <section className="mandate" aria-label="Your standing permission">
           <h2>What you’ve allowed Sage to do</h2>
-          <p className="mandate-plain">{mandate.plain}</p>
+          <p className="mandate-plain">
+            Sage may spend up to <strong>${scope.max_per_tx.value} {scope.max_per_tx.currency}</strong> per purchase, only at your approved places.
+          </p>
           <ul className="merchants">
-            {mandate.approvedMerchants.map((m) => <li key={m.id}>✅ {m.label}</li>)}
+            {scope.merchant_whitelist.length === 0 && <li>⚠️ No approved places yet</li>}
+            {scope.merchant_whitelist.map((id) => <li key={id}>✅ {labelFor(id)}</li>)}
           </ul>
+
+          <details className="setup">
+            <summary>⚙️ Change permissions (family controls)</summary>
+            <div className="setup-body">
+              <label className="field">
+                <span>Spend up to, per purchase</span>
+                <span className="money">$
+                  <input type="number" min="0" step="1" value={scope.max_per_tx.value}
+                    onChange={(e) => setScope({ ...scope, max_per_tx: { ...scope.max_per_tx, value: e.target.value || '0' } })} /> CAD
+                </span>
+              </label>
+              <fieldset className="field">
+                <legend>Approved places</legend>
+                {PROVIDERS.map((p) => (
+                  <label key={p.id} className="provider">
+                    <input type="checkbox" checked={scope.merchant_whitelist.includes(p.id)}
+                      onChange={(e) => setScope({
+                        ...scope,
+                        merchant_whitelist: e.target.checked
+                          ? [...scope.merchant_whitelist, p.id]
+                          : scope.merchant_whitelist.filter((m) => m !== p.id),
+                      })} />
+                    <span>{p.label}</span>
+                  </label>
+                ))}
+              </fieldset>
+              <p className="setup-note">Change these, then try a request — Sage obeys instantly.</p>
+            </div>
+          </details>
         </section>
       )}
 
