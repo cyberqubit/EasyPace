@@ -15,10 +15,13 @@ import { didDocument, MARGARET_SCOPE, MERCHANT_LABELS, type Env } from './config
 import { runScenario, SCENARIOS, type ScenarioName } from './scenarios.js';
 import { verifyBundle } from './verify.js';
 import { askSage } from './sage.js';
+import { auth, userTokenFromRequest } from './auth.js';
 
 const app = new Hono<{ Bindings: Env }>();
 
 app.use('*', cors());
+
+app.route('/api/auth', auth);
 
 app.get('/health', (c) => c.json({ ok: true, service: 'easypace-sage-verifier' }));
 
@@ -55,7 +58,8 @@ app.post('/api/sage/ask', async (c) => {
   const transcript = typeof body.transcript === 'string' ? body.transcript.trim() : '';
   if (!transcript) return c.json({ understood: false, sageSays: 'I didn’t hear anything — please try again.', parsedBy: 'keywords' }, 400);
   try {
-    return c.json(await askSage(c.env, transcript, offline));
+    const userToken = (await userTokenFromRequest(c)) ?? undefined;
+    return c.json(await askSage(c.env, transcript, offline, userToken));
   } catch (err) {
     return c.json({ understood: false, sageSays: 'Something went wrong on my side — let’s try again.', error: err instanceof Error ? err.message : 'error', parsedBy: 'keywords' }, 500);
   }

@@ -77,4 +77,11 @@ export interface Env {
   AGNIC_API_TOKEN?: string;
   AGNIC_PARTNER_ID?: string;
   AGNIC_MODEL?: string;
+  /** Agnic OAuth (Sign in with Agnic). */
+  AGNIC_CLIENT_ID?: string;
+  AGNIC_CLIENT_SECRET?: string;
+  AGNIC_REDIRECT_URI?: string;
+  FRONTEND_ORIGIN?: string;
+  /** KV namespace for OAuth state + session tokens. */
+  SESSIONS: KVNamespace;
 }

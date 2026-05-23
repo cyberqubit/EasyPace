@@ -1,6 +1,45 @@
 /** API client for the Sage verifier Worker. */
 const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined) ?? '';
 
+// ── Agnic sign-in session (opaque id in localStorage; sent as Bearer) ──
+const SESSION_KEY = 'easypace_session';
+export function getSession(): string | null {
+  return localStorage.getItem(SESSION_KEY);
+}
+export function captureSession(): string | null {
+  const params = new URLSearchParams(location.search);
+  const s = params.get('session');
+  if (s) {
+    localStorage.setItem(SESSION_KEY, s);
+    params.delete('session');
+    const qs = params.toString();
+    history.replaceState({}, '', location.pathname + (qs ? `?${qs}` : ''));
+  }
+  return getSession();
+}
+export function clearSession(): void {
+  localStorage.removeItem(SESSION_KEY);
+}
+function authHeaders(): Record<string, string> {
+  const s = getSession();
+  return s ? { authorization: `Bearer ${s}` } : {};
+}
+export const signInUrl = (): string => `${API_BASE}/api/auth/login`;
+
+export interface Me {
+  signedIn: boolean;
+  balance?: { usdcBalance?: string; creditBalance?: string; totalBalance?: string; address?: string };
+  user?: Record<string, unknown>;
+}
+export async function authMe(): Promise<Me> {
+  const res = await fetch(`${API_BASE}/api/auth/me`, { headers: authHeaders() });
+  return res.json();
+}
+export async function logout(): Promise<void> {
+  await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: authHeaders() });
+  clearSession();
+}
+
 export type ScenarioName = 'approved' | 'scam-merchant' | 'over-limit' | 'expired' | 'impostor';
 
 export interface VerifyOutcome {
@@ -64,7 +103,7 @@ export interface AskResult {
 export async function askSage(transcript: string, offline: boolean): Promise<AskResult> {
   const res = await fetch(`${API_BASE}/api/sage/ask${offline ? '?offline=true' : ''}`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...authHeaders() },
     body: JSON.stringify({ transcript }),
   });
   return res.json();

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
   getMandate, runScenario, askSage, CHECK_LABELS,
-  type Mandate, type ScenarioName, type VerifyOutcome,
+  authMe, signInUrl, logout, captureSession,
+  type Mandate, type ScenarioName, type VerifyOutcome, type Me,
 } from './api';
 import { speak, stopSpeaking, speechSupported, listen, sttSupported } from './speech';
 
@@ -30,10 +31,20 @@ export function App() {
   const [listening, setListening] = useState(false);
   const [display, setDisplay] = useState<Display | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [me, setMe] = useState<Me | null>(null);
 
   useEffect(() => {
     getMandate().then(setMandate).catch(() => setError('Could not reach Sage. Is the verifier running?'));
+    captureSession();
+    authMe().then(setMe).catch(() => setMe({ signedIn: false }));
+    const authErr = new URLSearchParams(location.search).get('auth_error');
+    if (authErr) setError('Sign-in isn’t available yet (the Agnic app is pending approval).');
   }, []);
+
+  async function handleSignOut() {
+    await logout();
+    setMe({ signedIn: false });
+  }
 
   function show(d: Display) {
     setDisplay(d);
@@ -80,11 +91,21 @@ export function App() {
             <p className="tagline">Meet <strong>Sage</strong> — your helper that pays and books, safely.</p>
           </div>
         </div>
-        <label className="toggle">
-          <input type="checkbox" checked={readAloud} disabled={!speechSupported}
-            onChange={(e) => { setReadAloud(e.target.checked); if (!e.target.checked) stopSpeaking(); }} />
-          <span>🔊 Read aloud</span>
-        </label>
+        <div className="header-right">
+          <label className="toggle">
+            <input type="checkbox" checked={readAloud} disabled={!speechSupported}
+              onChange={(e) => { setReadAloud(e.target.checked); if (!e.target.checked) stopSpeaking(); }} />
+            <span>🔊 Read aloud</span>
+          </label>
+          {me?.signedIn ? (
+            <div className="account">
+              <span className="balance" title="Your Agnic wallet">💳 ${me.balance?.totalBalance ?? me.balance?.usdcBalance ?? '—'}</span>
+              <button className="ghost small" onClick={handleSignOut}>Sign out</button>
+            </div>
+          ) : (
+            <a className="signin" href={signInUrl()}>Sign in with Agnic</a>
+          )}
+        </div>
       </header>
 
       {mandate && (

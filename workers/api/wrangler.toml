@@ -9,6 +9,16 @@ compatibility_flags = ["nodejs_compat"]
 # so the DID document at /.well-known/did.json resolves to this Worker.
 [vars]
 ISSUER_DID = "did:web:easypace-api.inboxtoronto.workers.dev"
+FRONTEND_ORIGIN = "https://easypace-sage.pages.dev"
+# Agnic OAuth (sign-in). Client ID is public (appears in the authorize URL).
+AGNIC_CLIENT_ID = "app_26f4de2d9481ff9c349df843"
+AGNIC_REDIRECT_URI = "https://easypace-api.inboxtoronto.workers.dev/api/auth/callback"
+# Secret set via: wrangler secret put AGNIC_CLIENT_SECRET
+
+# Session store for the Agnic OAuth (PKCE) sign-in flow.
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "32b03c1593ec49c3ba430be327db544b"
 
 # Secret (NOT committed) — set for local dev in workers/api/.dev.vars,
 # and for production with:  wrangler secret put ISSUER_PRIVATE_JWK

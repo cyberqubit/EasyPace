@@ -64,14 +64,14 @@ export function parseIntentKeywords(transcript: string): SageIntent {
 }
 
 /** Agnic AI Gateway (Gemini) intent parser. Returns null on any failure so the caller falls back. */
-async function parseIntentLLM(env: Env, transcript: string): Promise<SageIntent | null> {
+async function parseIntentLLM(env: Env, transcript: string, token: string): Promise<SageIntent | null> {
   const system = `You are Sage, an assistant for a senior. Convert the user's spoken request into a JSON payment intent.
 Approved merchants: "sunrise-pharmacy" (label "Sunrise Pharmacy", category pharmacy), "fresh-grocer" (label "Fresh Grocer", category grocery). Per-purchase limit: $${MARGARET_SCOPE.max_per_tx.value} CAD.
 If the request matches an approved merchant, use its id/label/category. If it's anyone else (tax/CRA/gift-card/unknown payee), set merchantId to a short slug, give a human merchantLabel, and category "other".
 Output ONLY minified JSON: {"understood":bool,"merchantId":str,"merchantLabel":str,"amount":{"value":"0.00","currency":"CAD"},"category":str,"restate":str}. If you can't tell what they want, set understood=false.`;
 
   const headers: Record<string, string> = {
-    Authorization: `Bearer ${env.AGNIC_API_TOKEN}`,
+    Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json',
   };
   if (env.AGNIC_PARTNER_ID) headers['X-Partner-Id'] = env.AGNIC_PARTNER_ID;
@@ -100,10 +100,12 @@ Output ONLY minified JSON: {"understood":bool,"merchantId":str,"merchantLabel":s
   return parsed;
 }
 
-export async function parseIntent(env: Env, transcript: string): Promise<{ intent: SageIntent; parsedBy: SageAnswer['parsedBy'] }> {
-  if (env.AGNIC_API_TOKEN) {
+export async function parseIntent(env: Env, transcript: string, userToken?: string): Promise<{ intent: SageIntent; parsedBy: SageAnswer['parsedBy'] }> {
+  // Prefer the signed-in user's token (bills their wallet, $5 credit), else our API token.
+  const token = userToken ?? env.AGNIC_API_TOKEN;
+  if (token) {
     try {
-      const llm = await parseIntentLLM(env, transcript);
+      const llm = await parseIntentLLM(env, transcript, token);
       if (llm) return { intent: llm, parsedBy: 'agnic-gateway' };
     } catch {
       /* fall through to keywords */
@@ -130,8 +132,8 @@ function sageReply(code: string, intent: SageIntent): string {
   }
 }
 
-export async function askSage(env: Env, transcript: string, offline = false): Promise<SageAnswer> {
-  const { intent, parsedBy } = await parseIntent(env, transcript);
+export async function askSage(env: Env, transcript: string, offline = false, userToken?: string): Promise<SageAnswer> {
+  const { intent, parsedBy } = await parseIntent(env, transcript, userToken);
 
   if (!intent.understood) {
     return {
