@@ -137,6 +137,9 @@ export function App() {
 
       <footer className="footer">
         <p>Sage checks every payment against limits you signed — and keeps protecting you even when servers go down.</p>
+        <p className="powered">
+          <a href="https://www.agnic.ai" target="_blank" rel="noopener noreferrer">⚡ Powered by Agnic</a>
+        </p>
       </footer>
     </div>
   );

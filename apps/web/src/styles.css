@@ -153,6 +153,13 @@ p { margin: 0.4rem 0; }
 .card-info { background: var(--panel); border: 3px solid var(--line); border-radius: var(--radius); padding: 1.25rem; margin-top: 0.5rem; }
 
 .footer { margin-top: 2rem; font-size: 1rem; color: #3a4a40; text-align: center; }
+.powered { margin-top: 1rem; }
+.powered a {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  font-size: 1rem; font-weight: 700; color: var(--brand); text-decoration: none;
+  padding: 0.5rem 1rem; border: 2px solid var(--line); border-radius: 999px;
+}
+.powered a:hover { background: var(--panel); }
 
 @media (prefers-reduced-motion: no-preference) {
   .action, .ghost { transition: background 0.15s ease; }
