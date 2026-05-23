@@ -114,15 +114,14 @@ export async function parseIntent(env: Env, transcript: string, userToken?: stri
   return { intent: parseIntentKeywords(transcript), parsedBy: 'keywords' };
 }
 
-function sageReply(code: string, intent: SageIntent): string {
-  const cap = MARGARET_SCOPE.max_per_tx.value;
+export function sageReply(code: string, merchantLabel: string, amountValue: string, capValue: string): string {
   switch (code) {
     case 'approved':
-      return `Done — I paid ${intent.merchantLabel} $${intent.amount.value} for you. That was within the limits you set.`;
+      return `Done — I paid ${merchantLabel} $${amountValue} for you. That was within the limits you set.`;
     case 'wrong_merchant':
-      return `I stopped this. ${intent.merchantLabel} is not one of your approved places, so I did not pay. If someone is pressuring you to pay, it may be a scam.`;
+      return `I stopped this. ${merchantLabel} is not one of your approved places, so I did not pay. If someone is pressuring you to pay, it may be a scam.`;
     case 'over_limit':
-      return `I did not pay this. It is $${intent.amount.value}, but your limit is $${cap} per purchase. If this is right, you can approve it yourself.`;
+      return `I did not pay this. It is $${amountValue}, but your limit is $${capValue} per purchase. If this is right, you can approve it yourself.`;
     case 'expired':
       return `I did not use that — your approval had expired, so I asked for a fresh one to keep you safe.`;
     case 'forged_signature':
@@ -170,6 +169,6 @@ export async function askSage(env: Env, transcript: string, offline = false, use
     parsedBy,
     outcome: result.valid ? 'approved' : 'blocked',
     result,
-    sageSays: sageReply(result.reasonCode, intent),
+    sageSays: sageReply(result.reasonCode, intent.merchantLabel, intent.amount.value, scope?.max_per_tx.value ?? MARGARET_SCOPE.max_per_tx.value),
   };
 }
