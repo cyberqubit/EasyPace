@@ -73,4 +73,8 @@ export function didDocument(issuerDid: string) {
 export interface Env {
   ISSUER_DID: string;
   ISSUER_PRIVATE_JWK: string;
+  /** Optional: enables LLM intent parsing via the Agnic AI Gateway. */
+  AGNIC_API_TOKEN?: string;
+  AGNIC_PARTNER_ID?: string;
+  AGNIC_MODEL?: string;
 }

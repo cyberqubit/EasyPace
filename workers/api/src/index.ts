@@ -14,6 +14,7 @@ import { cors } from 'hono/cors';
 import { didDocument, MARGARET_SCOPE, MERCHANT_LABELS, type Env } from './config.js';
 import { runScenario, SCENARIOS, type ScenarioName } from './scenarios.js';
 import { verifyBundle } from './verify.js';
+import { askSage } from './sage.js';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -45,6 +46,18 @@ app.post('/api/demo/:scenario', async (c) => {
     return c.json(result);
   } catch (err) {
     return c.json({ error: err instanceof Error ? err.message : 'scenario failed' }, 500);
+  }
+});
+
+app.post('/api/sage/ask', async (c) => {
+  const offline = c.req.query('offline') === 'true';
+  const body = await c.req.json().catch(() => ({}));
+  const transcript = typeof body.transcript === 'string' ? body.transcript.trim() : '';
+  if (!transcript) return c.json({ understood: false, sageSays: 'I didn’t hear anything — please try again.', parsedBy: 'keywords' }, 400);
+  try {
+    return c.json(await askSage(c.env, transcript, offline));
+  } catch (err) {
+    return c.json({ understood: false, sageSays: 'Something went wrong on my side — let’s try again.', error: err instanceof Error ? err.message : 'error', parsedBy: 'keywords' }, 500);
   }
 });
 

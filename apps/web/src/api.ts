@@ -51,6 +51,25 @@ export async function runScenario(name: ScenarioName, offline: boolean): Promise
   return res.json();
 }
 
+export interface AskResult {
+  understood: boolean;
+  transcript?: string;
+  sageSays: string;
+  outcome?: 'approved' | 'blocked';
+  result?: VerifyOutcome;
+  parsedBy?: 'agnic-gateway' | 'keywords';
+  intent?: { merchantLabel: string; amount: { value: string; currency: string } };
+}
+
+export async function askSage(transcript: string, offline: boolean): Promise<AskResult> {
+  const res = await fetch(`${API_BASE}/api/sage/ask${offline ? '?offline=true' : ''}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ transcript }),
+  });
+  return res.json();
+}
+
 export const CHECK_LABELS: Record<keyof VerifyOutcome['checks'], string> = {
   template_signature: 'Authorization signed by user',
   derivation_signature: 'Transaction signed by issuer',

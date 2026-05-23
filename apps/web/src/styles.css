@@ -134,6 +134,24 @@ p { margin: 0.4rem 0; }
   background: var(--block-bg); border: 2px solid var(--block); border-radius: 12px;
 }
 
+/* Talk to Sage (voice) */
+.mic {
+  display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+  width: 100%; min-height: 84px; margin-bottom: 0.5rem;
+  font-size: 1.5rem; font-weight: 800; color: #fff;
+  background: var(--brand); border: none; border-radius: var(--radius); cursor: pointer;
+}
+.mic:hover:not(:disabled) { background: #143728; }
+.mic:disabled { opacity: 0.6; cursor: default; }
+.mic[aria-busy="true"] { background: var(--block); animation: pulse 1.2s ease-in-out infinite; }
+.mic-icon { font-size: 2rem; }
+@keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.7 } }
+
+.note { font-size: 0.95rem; color: #3a4a40; margin: 0 0 0.5rem; }
+.said { font-size: 1.15rem; font-style: italic; margin: 0.75rem 0 0.25rem; }
+.examples-label { font-size: 1rem; color: #3a4a40; text-align: center; margin: 1.5rem 0 0.6rem; }
+.card-info { background: var(--panel); border: 3px solid var(--line); border-radius: var(--radius); padding: 1.25rem; margin-top: 0.5rem; }
+
 .footer { margin-top: 2rem; font-size: 1rem; color: #3a4a40; text-align: center; }
 
 @media (prefers-reduced-motion: no-preference) {
