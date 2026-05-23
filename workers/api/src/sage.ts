@@ -32,6 +32,19 @@ export interface SageAnswer {
   parsedBy: 'agnic-gateway' | 'keywords';
 }
 
+/** Safe default model (Gemini Flash has safety filters — right for seniors). */
+export const DEFAULT_MODEL = 'google/gemini-3.5-flash';
+
+/** Curated, senior-appropriate subset shown in the optional model picker. We
+ *  intersect this with Agnic's live catalog so we never offer a 404 model. */
+export const CURATED_MODELS: { id: string; label: string }[] = [
+  { id: 'google/gemini-3.5-flash', label: 'Standard — Gemini (recommended)' },
+  { id: '~anthropic/claude-haiku-latest', label: 'Careful — Claude Haiku' },
+  { id: '~openai/gpt-mini-latest', label: 'Fast — GPT mini' },
+  { id: '~google/gemini-flash-latest', label: 'Gemini (always latest)' },
+  { id: 'deepseek/deepseek-v4-flash', label: 'Economical — DeepSeek' },
+];
+
 const money = (v: number): Money => ({ value: v.toFixed(2), currency: 'CAD' });
 
 function wordsToAmount(text: string): number | null {
@@ -64,7 +77,7 @@ export function parseIntentKeywords(transcript: string): SageIntent {
 }
 
 /** Agnic AI Gateway (Gemini) intent parser. Returns null on any failure so the caller falls back. */
-async function parseIntentLLM(env: Env, transcript: string, token: string): Promise<SageIntent | null> {
+async function parseIntentLLM(env: Env, transcript: string, token: string, model: string): Promise<SageIntent | null> {
   const system = `You are Sage, an assistant for a senior. Convert the user's spoken request into a JSON payment intent.
 Approved merchants: "sunrise-pharmacy" (label "Sunrise Pharmacy", category pharmacy), "fresh-grocer" (label "Fresh Grocer", category grocery). Per-purchase limit: $${MARGARET_SCOPE.max_per_tx.value} CAD.
 If the request matches an approved merchant, use its id/label/category. If it's anyone else (tax/CRA/gift-card/unknown payee), set merchantId to a short slug, give a human merchantLabel, and category "other".
@@ -80,7 +93,7 @@ Output ONLY minified JSON: {"understood":bool,"merchantId":str,"merchantLabel":s
     method: 'POST',
     headers,
     body: JSON.stringify({
-      model: env.AGNIC_MODEL ?? 'google/gemini-3.5-flash',
+      model,
       temperature: 0,
       messages: [
         { role: 'system', content: system },
@@ -100,12 +113,13 @@ Output ONLY minified JSON: {"understood":bool,"merchantId":str,"merchantLabel":s
   return parsed;
 }
 
-export async function parseIntent(env: Env, transcript: string, userToken?: string): Promise<{ intent: SageIntent; parsedBy: SageAnswer['parsedBy'] }> {
+export async function parseIntent(env: Env, transcript: string, userToken?: string, model?: string): Promise<{ intent: SageIntent; parsedBy: SageAnswer['parsedBy'] }> {
   // Prefer the signed-in user's token (bills their wallet, $5 credit), else our API token.
   const token = userToken ?? env.AGNIC_API_TOKEN;
+  const chosenModel = model || env.AGNIC_MODEL || DEFAULT_MODEL;
   if (token) {
     try {
-      const llm = await parseIntentLLM(env, transcript, token);
+      const llm = await parseIntentLLM(env, transcript, token, chosenModel);
       if (llm) return { intent: llm, parsedBy: 'agnic-gateway' };
     } catch {
       /* fall through to keywords */
@@ -131,8 +145,8 @@ export function sageReply(code: string, merchantLabel: string, amountValue: stri
   }
 }
 
-export async function askSage(env: Env, transcript: string, offline = false, userToken?: string, scope?: MandateScope): Promise<SageAnswer> {
-  const { intent, parsedBy } = await parseIntent(env, transcript, userToken);
+export async function askSage(env: Env, transcript: string, offline = false, userToken?: string, scope?: MandateScope, model?: string): Promise<SageAnswer> {
+  const { intent, parsedBy } = await parseIntent(env, transcript, userToken, model);
 
   if (!intent.understood) {
     return {

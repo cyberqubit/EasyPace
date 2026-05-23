@@ -14,7 +14,7 @@ import { cors } from 'hono/cors';
 import { didDocument, MARGARET_SCOPE, MERCHANT_LABELS, type Env } from './config.js';
 import { runScenario, SCENARIOS, type ScenarioName } from './scenarios.js';
 import { verifyBundle } from './verify.js';
-import { askSage } from './sage.js';
+import { askSage, CURATED_MODELS, DEFAULT_MODEL } from './sage.js';
 import { auth, userTokenFromRequest } from './auth.js';
 import type { MandateScope } from './issuer.js';
 
@@ -54,6 +54,24 @@ app.get('/api/mandate', (c) =>
 
 app.get('/api/demo/scenarios', (c) => c.json({ scenarios: SCENARIOS }));
 
+// Available AI models — the curated, senior-appropriate subset, intersected
+// with Agnic's live catalog so we never offer a model that 404s.
+app.get('/api/models', async (c) => {
+  const available = new Set<string>();
+  if (c.env.AGNIC_API_TOKEN) {
+    try {
+      const r = await fetch('https://api.agnic.ai/v1/models', { headers: { authorization: `Bearer ${c.env.AGNIC_API_TOKEN}` } });
+      if (r.ok) {
+        const j = (await r.json()) as { data?: { id: string }[]; models?: { id: string }[] };
+        for (const m of j.data ?? j.models ?? []) available.add(m.id);
+      }
+    } catch { /* fall back to curated list as-is */ }
+  }
+  const models = available.size ? CURATED_MODELS.filter((m) => available.has(m.id)) : CURATED_MODELS;
+  if (!models.some((m) => m.id === DEFAULT_MODEL)) models.unshift({ id: DEFAULT_MODEL, label: 'Standard — Gemini (recommended)' });
+  return c.json({ default: DEFAULT_MODEL, models });
+});
+
 app.post('/api/demo/:scenario', async (c) => {
   const scenario = c.req.param('scenario') as ScenarioName;
   if (!SCENARIOS.includes(scenario)) {
@@ -78,7 +96,8 @@ app.post('/api/sage/ask', async (c) => {
   try {
     const userToken = (await userTokenFromRequest(c)) ?? undefined;
     const scope = parseScope(body?.scope);
-    return c.json(await askSage(c.env, transcript, offline, userToken, scope));
+    const model = typeof body?.model === 'string' ? body.model : undefined;
+    return c.json(await askSage(c.env, transcript, offline, userToken, scope, model));
   } catch (err) {
     return c.json({ understood: false, sageSays: 'Something went wrong on my side — let’s try again.', error: err instanceof Error ? err.message : 'error', parsedBy: 'keywords' }, 500);
   }

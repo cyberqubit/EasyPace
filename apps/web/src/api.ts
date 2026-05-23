@@ -106,12 +106,18 @@ export interface AskResult {
   intent?: { merchantLabel: string; amount: { value: string; currency: string } };
 }
 
-export async function askSage(transcript: string, offline: boolean, scope?: Scope): Promise<AskResult> {
+export async function askSage(transcript: string, offline: boolean, scope?: Scope, model?: string): Promise<AskResult> {
   const res = await fetch(`${API_BASE}/api/sage/ask${offline ? '?offline=true' : ''}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', ...authHeaders() },
-    body: JSON.stringify({ transcript, scope }),
+    body: JSON.stringify({ transcript, scope, model }),
   });
+  return res.json();
+}
+
+export interface ModelOption { id: string; label: string }
+export async function getModels(): Promise<{ default: string; models: ModelOption[] }> {
+  const res = await fetch(`${API_BASE}/api/models`);
   return res.json();
 }
 

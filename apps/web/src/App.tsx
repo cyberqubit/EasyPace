@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
-  getMandate, runScenario, askSage, CHECK_LABELS,
+  getMandate, runScenario, askSage, getModels, CHECK_LABELS,
   authMe, signInUrl, logout, captureSession,
-  type ScenarioName, type VerifyOutcome, type Me, type Scope,
+  type ScenarioName, type VerifyOutcome, type Me, type Scope, type ModelOption,
 } from './api';
 import { speak, stopSpeaking, speechSupported, listen, sttSupported } from './speech';
 
@@ -39,9 +39,12 @@ export function App() {
   const [display, setDisplay] = useState<Display | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [me, setMe] = useState<Me | null>(null);
+  const [models, setModels] = useState<ModelOption[]>([]);
+  const [model, setModel] = useState<string>('');
 
   useEffect(() => {
     getMandate().then((m) => setScope(m.scope)).catch(() => setError('Could not reach Sage. Is the verifier running?'));
+    getModels().then((d) => { setModels(d.models); setModel(d.default); }).catch(() => {});
     captureSession();
     authMe().then(setMe).catch(() => setMe({ signedIn: false }));
     const authErr = new URLSearchParams(location.search).get('auth_error');
@@ -82,7 +85,7 @@ export function App() {
     }
     setListening(false); setBusy(true);
     try {
-      const r = await askSage(transcript, offline, scope ?? undefined);
+      const r = await askSage(transcript, offline, scope ?? undefined, model || undefined);
       show({ sageSays: r.sageSays, outcome: r.outcome, verify: r.result, transcript });
     } catch { setError('Something didn’t work — let’s try again.'); }
     finally { setBusy(false); }
@@ -176,6 +179,19 @@ export function App() {
           <span>{listening ? 'Listening… say what you need' : 'Talk to Sage'}</span>
         </button>
         {!sttSupported && <p className="note">Tip: voice works best in Chrome. You can also tap an example below.</p>}
+
+        {models.length > 1 && (
+          <details className="advanced">
+            <summary>⚙️ Advanced: choose Sage’s AI model</summary>
+            <label className="model-row">
+              <span>AI model</span>
+              <select value={model} onChange={(e) => setModel(e.target.value)}>
+                {models.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
+              </select>
+            </label>
+            <p className="setup-note">The recommended model is safest for everyday help. Powered by Agnic’s gateway.</p>
+          </details>
+        )}
 
         <div aria-live="polite">
           {display?.transcript && <p className="said">You said: “{display.transcript}”</p>}
