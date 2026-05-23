@@ -80,7 +80,7 @@ Output ONLY minified JSON: {"understood":bool,"merchantId":str,"merchantLabel":s
     method: 'POST',
     headers,
     body: JSON.stringify({
-      model: env.AGNIC_MODEL ?? 'google/gemini-2.0-flash',
+      model: env.AGNIC_MODEL ?? 'google/gemini-3.5-flash',
       temperature: 0,
       messages: [
         { role: 'system', content: system },
@@ -142,6 +142,14 @@ export async function askSage(env: Env, transcript: string, offline = false, use
       parsedBy,
       sageSays: `I'm sorry, I didn't quite catch that. You can say things like "pay my prescription", "buy my groceries", or "someone from the CRA wants gift cards".`,
     };
+  }
+
+  // If no amount was stated ("grab my medication"), use a representative amount
+  // for the category — in production this comes from the merchant's bill/invoice.
+  if (!intent.amount || Number(intent.amount.value) <= 0) {
+    const def = intent.category === 'grocery' ? 25 : intent.category === 'pharmacy' ? 32 : 20;
+    intent.amount = { value: def.toFixed(2), currency: 'CAD' };
+    intent.restate = `Pay ${intent.merchantLabel} $${def.toFixed(2)}`;
   }
 
   const tpl = await mintTemplate(env, scope ? { scope } : {});
