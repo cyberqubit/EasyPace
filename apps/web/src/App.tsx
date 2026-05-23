@@ -10,7 +10,7 @@ interface Action {
 
 const ACTIONS: Action[] = [
   { name: 'approved', label: '💊  Pay my prescription', hint: '$32 at Sunrise Pharmacy' },
-  { name: 'scam-merchant', label: '📞  Pay “Medicare Renewal” $40', hint: 'A caller is demanding payment' },
+  { name: 'scam-merchant', label: '📞  Pay the “CRA” $40 in gift cards', hint: 'A scam caller threatening arrest' },
   { name: 'over-limit', label: '🛒  Pay the pharmacy $200', hint: 'Above the limit you set' },
   { name: 'expired', label: '📅  Use last month’s approval', hint: 'An old, expired permission' },
   { name: 'impostor', label: '🕵️  A fake agent tries to pay', hint: 'A forged permission' },

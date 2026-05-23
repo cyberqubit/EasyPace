@@ -13,7 +13,7 @@ Sage pays, books, and shops on a senior's behalf — but every transaction is cr
 
 ## The problem
 
-Autonomous AI agents that *pay* are arriving fast — but they're being built for technical users, not the people most exposed to financial harm. U.S. adults 60+ lost **$7.7B to fraud in 2025** (a 60% jump), and AI-powered scams surged over 1,200%. The same agent infrastructure that promises convenience is also a new attack surface.
+Autonomous AI agents that *pay* are arriving fast — but they're being built for technical users, not the people most exposed to financial harm. Canadians lose hundreds of millions of dollars to fraud every year, and seniors are hit hardest — with the **CRA "you owe back taxes, pay now or be arrested" phone scam** chief among them, now supercharged by AI voice-cloning. The same agent infrastructure that promises convenience is also a new attack surface.
 
 **EasyPace flips that:** the agent absorbs the complexity, and the senior gets *autonomy through trust* — not autonomy through expertise.
 
@@ -37,7 +37,7 @@ The verifier (running on a Cloudflare Worker as a `did:web` issuer + verifier) c
 | Scenario | Result | Why |
 |---|---|---|
 | 💊 Prescription refill at approved pharmacy | ✅ **Approved** | within signed limits |
-| 📞 "Medicare Renewal Dept" demanding $40 | 🛑 **Blocked** | merchant not authorized (the scam) |
+| 📞 "CRA" caller demanding $40 in gift cards | 🛑 **Blocked** | merchant not authorized (the scam) |
 | 🛒 $200 at the pharmacy | 🛑 **Blocked** | exceeds the $50/purchase cap |
 | 📅 Last month's approval | 🛑 **Blocked** | authorization expired |
 | 🕵️ A forged mandate from a fake agent | 🛑 **Blocked** | invalid issuer signature |

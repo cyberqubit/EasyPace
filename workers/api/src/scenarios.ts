@@ -35,10 +35,10 @@ export async function runScenario(env: Env, name: ScenarioName, offline = false)
       const tpl = await mintTemplate(env);
       const der = await mintDerivation(env, {
         parentJti: tpl.jti,
-        intent: { amount: { value: '32.00', currency: 'USD' }, merchant: 'sunrise-pharmacy', categories: ['pharmacy'] },
+        intent: { amount: { value: '32.00', currency: 'CAD' }, merchant: 'sunrise-pharmacy', categories: ['pharmacy'] },
       });
       const result = await verifyBundle(env, tpl.sdJwt, der,
-        { expectedMerchant: 'sunrise-pharmacy', expectedAmount: { value: '32.00', currency: 'USD' }, expectedCategories: ['pharmacy'] }, offline);
+        { expectedMerchant: 'sunrise-pharmacy', expectedAmount: { value: '32.00', currency: 'CAD' }, expectedCategories: ['pharmacy'] }, offline);
       return {
         scenario: name,
         title: 'Prescription refill',
@@ -53,15 +53,15 @@ export async function runScenario(env: Env, name: ScenarioName, offline = false)
       const tpl = await mintTemplate(env);
       const der = await mintDerivation(env, {
         parentJti: tpl.jti,
-        intent: { amount: { value: '40.00', currency: 'USD' }, merchant: 'medicare-renewal-dept', categories: ['pharmacy'] },
+        intent: { amount: { value: '40.00', currency: 'CAD' }, merchant: 'cra-collections', categories: ['pharmacy'] },
       });
       const result = await verifyBundle(env, tpl.sdJwt, der,
-        { expectedMerchant: 'medicare-renewal-dept', expectedAmount: { value: '40.00', currency: 'USD' }, expectedCategories: ['pharmacy'] }, offline);
+        { expectedMerchant: 'cra-collections', expectedAmount: { value: '40.00', currency: 'CAD' }, expectedCategories: ['pharmacy'] }, offline);
       return {
         scenario: name,
         title: 'Blocked a scam',
-        request: 'A caller said: pay the "Medicare Renewal Department" $40 to keep your coverage.',
-        sageSays: 'I stopped this. "Medicare Renewal Department" is not one of your approved places, so I did not pay it. Real Medicare never asks for payment this way.',
+        request: 'A caller said: pay the Canada Revenue Agency $40 in gift cards now, or face arrest.',
+        sageSays: 'I stopped this. The "Canada Revenue Agency" caller is not one of your approved places, so I did not pay. The real CRA never demands payment by phone or gift cards.',
         outcome: 'blocked',
         result,
       };
@@ -71,10 +71,10 @@ export async function runScenario(env: Env, name: ScenarioName, offline = false)
       const tpl = await mintTemplate(env);
       const der = await mintDerivation(env, {
         parentJti: tpl.jti,
-        intent: { amount: { value: '200.00', currency: 'USD' }, merchant: 'sunrise-pharmacy', categories: ['pharmacy'] },
+        intent: { amount: { value: '200.00', currency: 'CAD' }, merchant: 'sunrise-pharmacy', categories: ['pharmacy'] },
       });
       const result = await verifyBundle(env, tpl.sdJwt, der,
-        { expectedMerchant: 'sunrise-pharmacy', expectedAmount: { value: '200.00', currency: 'USD' }, expectedCategories: ['pharmacy'] }, offline);
+        { expectedMerchant: 'sunrise-pharmacy', expectedAmount: { value: '200.00', currency: 'CAD' }, expectedCategories: ['pharmacy'] }, offline);
       return {
         scenario: name,
         title: 'Over your limit',
@@ -89,11 +89,11 @@ export async function runScenario(env: Env, name: ScenarioName, offline = false)
       const tpl = await mintTemplate(env);
       const der = await mintDerivation(env, {
         parentJti: tpl.jti,
-        intent: { amount: { value: '32.00', currency: 'USD' }, merchant: 'sunrise-pharmacy', categories: ['pharmacy'] },
+        intent: { amount: { value: '32.00', currency: 'CAD' }, merchant: 'sunrise-pharmacy', categories: ['pharmacy'] },
         ttlSeconds: -60, // already expired
       });
       const result = await verifyBundle(env, tpl.sdJwt, der,
-        { expectedMerchant: 'sunrise-pharmacy', expectedAmount: { value: '32.00', currency: 'USD' }, expectedCategories: ['pharmacy'] }, offline);
+        { expectedMerchant: 'sunrise-pharmacy', expectedAmount: { value: '32.00', currency: 'CAD' }, expectedCategories: ['pharmacy'] }, offline);
       return {
         scenario: name,
         title: 'Permission expired',
@@ -108,11 +108,11 @@ export async function runScenario(env: Env, name: ScenarioName, offline = false)
       const tpl = await mintTemplate(env);
       const der = await mintDerivation(env, {
         parentJti: tpl.jti,
-        intent: { amount: { value: '32.00', currency: 'USD' }, merchant: 'sunrise-pharmacy', categories: ['pharmacy'] },
+        intent: { amount: { value: '32.00', currency: 'CAD' }, merchant: 'sunrise-pharmacy', categories: ['pharmacy'] },
         impostor: true,
       });
       const result = await verifyBundle(env, tpl.sdJwt, der,
-        { expectedMerchant: 'sunrise-pharmacy', expectedAmount: { value: '32.00', currency: 'USD' }, expectedCategories: ['pharmacy'] }, offline);
+        { expectedMerchant: 'sunrise-pharmacy', expectedAmount: { value: '32.00', currency: 'CAD' }, expectedCategories: ['pharmacy'] }, offline);
       return {
         scenario: name,
         title: 'Blocked a fake agent',

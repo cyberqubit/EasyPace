@@ -32,7 +32,7 @@ export const VCT_DERIVATION = 'https://agnic.ai/vct/IntentMandateDerivation';
  */
 export const MARGARET_SCOPE = {
   categories: ['pharmacy', 'grocery'],
-  max_per_tx: { value: '50.00', currency: 'USD' },
+  max_per_tx: { value: '50.00', currency: 'CAD' },
   merchant_whitelist: ['sunrise-pharmacy', 'fresh-grocer'],
 } as const;
 
@@ -40,7 +40,7 @@ export const MARGARET_SCOPE = {
 export const MERCHANT_LABELS: Record<string, string> = {
   'sunrise-pharmacy': 'Sunrise Pharmacy',
   'fresh-grocer': 'Fresh Grocer',
-  'medicare-renewal-dept': '"Medicare Renewal Department" (unknown)',
+  'cra-collections': '"Canada Revenue Agency" (unknown caller)',
 };
 
 /** Convert a did:web identifier to its DID-document URL. */
