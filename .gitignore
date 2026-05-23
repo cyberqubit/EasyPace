@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+
+# Ruflo / claude-flow runtime & state
+.claude-flow/
+.swarm/
+.claude/
+*.db
+
+# Environment / secrets
+.env
+.env.*
