@@ -10,3 +10,8 @@ node_modules/
 # Environment / secrets
 .env
 .env.*
+.dev.vars
+
+# Build / tooling
+.wrangler/
+dist/

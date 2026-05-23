@@ -1,5 +1,13 @@
 {
-  "dependencies": {
-    "agentic-flow": "^2.0.13"
+  "name": "easypace",
+  "private": true,
+  "description": "EasyPace — Sage: a trustworthy agentic-commerce assistant for seniors",
+  "workspaces": [
+    "apps/*",
+    "workers/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20"
   }
 }

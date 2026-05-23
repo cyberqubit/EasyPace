@@ -1,0 +1,15 @@
+name = "easypace-api"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# did:web issuer identity for EasyPace / Sage.
+# IMPORTANT: after first `wrangler deploy`, set this to the deployed host, e.g.
+#   ISSUER_DID = "did:web:easypace-api.<your-subdomain>.workers.dev"
+# so the DID document at /.well-known/did.json resolves to this Worker.
+[vars]
+ISSUER_DID = "did:web:easypace-api.inboxtoronto.workers.dev"
+
+# Secret (NOT committed) — set for local dev in workers/api/.dev.vars,
+# and for production with:  wrangler secret put ISSUER_PRIVATE_JWK
+# ISSUER_PRIVATE_JWK = '{"kty":"EC",...}'
