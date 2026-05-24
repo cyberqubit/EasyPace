@@ -18,18 +18,23 @@ import { askSage, CURATED_MODELS, DEFAULT_MODEL } from './sage.js';
 import { auth, userTokenFromRequest } from './auth.js';
 import type { MandateScope } from './issuer.js';
 
-/** Validate a caller-supplied mandate scope (from the Permissions panel); else undefined → default. */
+/**
+ * Parse a caller-supplied mandate scope, MERGING any provided fields over the
+ * defaults — so a partial scope (e.g. just a lower max_per_tx) is honoured
+ * rather than silently ignored. Returns undefined only when no scope is sent.
+ */
 function parseScope(raw: unknown): MandateScope | undefined {
   if (!raw || typeof raw !== 'object') return undefined;
   const s = raw as Record<string, unknown>;
-  const cap = s.max_per_tx as { value?: unknown; currency?: unknown } | undefined;
-  if (!Array.isArray(s.categories) || !Array.isArray(s.merchant_whitelist) || !cap || typeof cap.value !== 'string') {
-    return undefined;
-  }
+  const base = MARGARET_SCOPE;
+  const cap = (s.max_per_tx ?? {}) as { value?: unknown; currency?: unknown };
   return {
-    categories: (s.categories as unknown[]).map(String),
-    merchant_whitelist: (s.merchant_whitelist as unknown[]).map(String),
-    max_per_tx: { value: String(cap.value), currency: String(cap.currency ?? 'CAD') },
+    categories: Array.isArray(s.categories) ? (s.categories as unknown[]).map(String) : [...base.categories],
+    merchant_whitelist: Array.isArray(s.merchant_whitelist) ? (s.merchant_whitelist as unknown[]).map(String) : [...base.merchant_whitelist],
+    max_per_tx: {
+      value: typeof cap.value === 'string' || typeof cap.value === 'number' ? String(cap.value) : base.max_per_tx.value,
+      currency: typeof cap.currency === 'string' ? cap.currency : base.max_per_tx.currency,
+    },
   };
 }
 

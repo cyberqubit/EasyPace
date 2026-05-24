@@ -176,9 +176,9 @@ export function App() {
       <main>
         <h2 className="ask">What do you need, Margaret?</h2>
 
-        <button className="mic" onClick={handleTalk} disabled={busy || listening} aria-busy={listening}>
-          <span className="mic-icon" aria-hidden="true">🎤</span>
-          <span>{listening ? 'Listening… say what you need' : 'Talk to Sage'}</span>
+        <button className="mic" onClick={handleTalk} disabled={busy || listening} aria-busy={listening || busy}>
+          <span className="mic-icon" aria-hidden="true">{busy && !listening ? '⏳' : '🎤'}</span>
+          <span>{listening ? 'Listening… say what you need' : busy ? 'Sage is thinking…' : 'Talk to Sage'}</span>
         </button>
         {!sttSupported && <p className="note">Tip: voice works best in Chrome. You can also tap an example below.</p>}
 
