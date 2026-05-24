@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EasyPace — Sage · Pitch Deck</title>
+<style>
+  :root{
+    --ink:#16261d; --green:#1b4332; --green-2:#143728; --soft:#95d5b2;
+    --bg:#ffffff; --muted:#43554a; --line:#c7d6cc;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Inter',-apple-system,Segoe UI,Arial,sans-serif;
+    color:var(--ink); background:var(--bg);
+  }
+  .deck{height:100vh;overflow-y:scroll;scroll-snap-type:y mandatory;scroll-behavior:smooth}
+  section{
+    position:relative;min-height:100vh;scroll-snap-align:start;
+    display:flex;flex-direction:column;justify-content:center;
+    padding:6vh 9vw; gap:.6rem;
+  }
+  .kicker{font-size:1rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--green)}
+  h1{font-size:clamp(2.4rem,6vw,4.5rem);line-height:1.05;letter-spacing:-.02em}
+  h2{font-size:clamp(1.8rem,4.2vw,3rem);line-height:1.1;letter-spacing:-.01em}
+  p.sub{font-size:clamp(1.1rem,2vw,1.5rem);color:var(--muted);margin-top:.4rem}
+  ul{list-style:none;margin-top:1.2rem;display:grid;gap:.7rem;max-width:60ch}
+  li{font-size:clamp(1.05rem,1.7vw,1.4rem);line-height:1.45;padding-left:1.6rem;position:relative}
+  li::before{content:"";position:absolute;left:0;top:.62em;width:.7rem;height:.7rem;border-radius:50%;background:var(--soft)}
+  li.block::before{background:#9b1c1c} li.ok::before{background:#1b5e20}
+  strong{color:var(--green)}
+  .num{position:absolute;right:9vw;bottom:5vh;font-size:.95rem;color:var(--muted)}
+  .brandfoot{position:absolute;left:9vw;bottom:5vh;font-size:.95rem;color:var(--muted);font-weight:700}
+  .hint{position:fixed;right:14px;bottom:12px;font-size:.8rem;color:#8aa;opacity:.7}
+  /* visual placeholder for screenshots */
+  .shot{margin-top:1.4rem;border:2px dashed var(--line);border-radius:16px;padding:1.4rem 1.6rem;
+        color:var(--muted);font-size:1rem;background:#f1f7f3;max-width:60ch}
+  .shot b{color:var(--green)}
+  .row{display:flex;gap:2rem;flex-wrap:wrap;margin-top:1.2rem}
+  .stat{font-size:clamp(1.6rem,3.5vw,2.6rem);font-weight:800;color:var(--green)}
+  .stat span{display:block;font-size:1rem;font-weight:500;color:var(--muted);margin-top:.2rem}
+  .qr{width:120px;height:120px;margin-top:1.2rem}
+  .logo{font-size:2.6rem}
+  /* dark slides */
+  section.dark{background:var(--green);color:#fff}
+  section.dark .kicker{color:var(--soft)}
+  section.dark strong{color:var(--soft)}
+  section.dark .sub{color:#d7ecdf}
+  section.dark .num,section.dark .brandfoot{color:#a9c7b5}
+  section.dark .big-close{font-size:clamp(1.6rem,3.4vw,2.4rem);line-height:1.2;margin-top:1.4rem;max-width:24ch}
+  .demo-word{font-size:clamp(4rem,12vw,9rem);font-weight:900;letter-spacing:-.03em;color:var(--green)}
+  @media print{
+    .deck{height:auto;overflow:visible;scroll-snap-type:none}
+    section{height:auto;min-height:100vh;page-break-after:always;break-after:page}
+    .hint{display:none}
+    @page{size:landscape}
+  }
+</style>
+</head>
+<body>
+<div class="deck">
+
+  <!-- 1 TITLE -->
+  <section class="dark">
+    <div class="logo">🌿</div>
+    <span class="kicker">Agnic Agentic Commerce Pioneers · Trust track</span>
+    <h1>EasyPace — <em>Sage</em></h1>
+    <p class="sub">Autonomous commerce with a conscience.</p>
+    <p class="sub">easypace-sage.pages.dev</p>
+    <img class="qr" src="qr.svg" alt="Scan to open EasyPace" />
+    <span class="brandfoot">EasyPace — Sage</span><span class="num">01</span>
+  </section>
+
+  <!-- 2 PROBLEM -->
+  <section>
+    <span class="kicker">The Problem</span>
+    <h2>Margaret almost lost $4,200 to a fake “CRA” call.</h2>
+    <ul>
+      <li>Seniors want help with everyday money tasks — but are terrified of being scammed.</li>
+      <li>The real cost: lost <strong>independence</strong>, broken <strong>confidence</strong>, families forced to take over.</li>
+      <li>Canadians 65+ lose hundreds of millions to fraud a year — AI voice-cloning makes it worse.</li>
+    </ul>
+    <span class="brandfoot">EasyPace — Sage</span><span class="num">02</span>
+  </section>
+
+  <!-- 3 SOLUTION -->
+  <section>
+    <span class="kicker">The Solution</span>
+    <h2>Meet Sage — she just talks, and it’s safe.</h2>
+    <ul>
+      <li>“Refill my heart medication.” → done.</li>
+      <li>Sage can <strong>only ever</strong> do what the senior &amp; family approved in advance.</li>
+      <li class="block">Scam call · over-limit · expired · forged → blocked.</li>
+      <li class="ok">Seniors stay independent · families get peace of mind · scammers shut out.</li>
+    </ul>
+    <div class="shot"><b>📱 Screenshot:</b> the Sage home screen (mic + permissions card). <br><i>Replace this box with: &lt;img src="shot-home.png"&gt;</i></div>
+    <span class="brandfoot">EasyPace — Sage</span><span class="num">03</span>
+  </section>
+
+  <!-- 4 DEMO -->
+  <section class="dark">
+    <span class="kicker">Live Demonstration</span>
+    <div class="demo-word" style="color:#fff">DEMO</div>
+    <ul>
+      <li>Speak → pay the pharmacy <strong>(approved)</strong></li>
+      <li>Block a CRA gift-card scam</li>
+      <li>Lower the limit live → the next payment is held</li>
+      <li>Take the server offline → Sage still works from cache</li>
+      <li>On-chain ERC-8004 agent identity on Basescan</li>
+    </ul>
+    <p class="sub">— drive the live app / video here —</p>
+    <span class="brandfoot">EasyPace — Sage</span><span class="num">04</span>
+  </section>
+
+  <!-- 5 COMPETITION -->
+  <section>
+    <span class="kicker">Competition</span>
+    <h2>Built trust-first, for the people most at risk.</h2>
+    <ul>
+      <li><strong>Direct:</strong> ChatGPT, Amazon shopping agents — built for tech-savvy users, no trust layer for the vulnerable.</li>
+      <li><strong>Indirect:</strong> a family member doing it manually, or doing nothing and staying exposed.</li>
+      <li><strong>Our wedge:</strong> the only one designed trust-first, for seniors.</li>
+    </ul>
+    <span class="brandfoot">EasyPace — Sage</span><span class="num">05</span>
+  </section>
+
+  <!-- 6 MARKET -->
+  <section>
+    <span class="kicker">Market</span>
+    <h2>Big · Real · Reachable</h2>
+    <div class="row">
+      <div class="stat">~69M<span>N. American adults 65+ (TAM) — trillions in wealth</span></div>
+      <div class="stat">10s of M<span>online &amp; managing bills (SAM)</span></div>
+      <div class="stat">1,000s<span>Canadian families, year one (SOM)</span></div>
+    </div>
+    <span class="brandfoot">EasyPace — Sage</span><span class="num">06</span>
+  </section>
+
+  <!-- 7 GTM -->
+  <section>
+    <span class="kicker">Go-to-Market &amp; Business Model</span>
+    <h2>Trusted channels, aligned incentives.</h2>
+    <ul>
+      <li>Partner with channels seniors already trust: <strong>Senior Planet/OATS, libraries, “set it up for Mom”</strong> referral.</li>
+      <li><strong>Free for families.</strong> A small partner commission through Agnic.</li>
+      <li>We earn only when Sage actually helps — incentives aligned.</li>
+    </ul>
+    <span class="brandfoot">EasyPace — Sage</span><span class="num">07</span>
+  </section>
+
+  <!-- 8 TEAM -->
+  <section>
+    <span class="kicker">Team</span>
+    <h2>Built to execute.</h2>
+    <ul>
+      <li><strong>[Your name]</strong> — built EasyPace end-to-end on Agnic in days.</li>
+      <li>Why this matters to me: <strong>[your parent / grandparent]</strong>.</li>
+      <li>Seeking a co-founder with senior-care or fintech distribution.</li>
+    </ul>
+    <span class="brandfoot">EasyPace — Sage</span><span class="num">08</span>
+  </section>
+
+  <!-- 9 ASK -->
+  <section class="dark">
+    <span class="kicker">The Ask</span>
+    <h2>What we’re looking for</h2>
+    <ul>
+      <li>An introduction to a senior-serving organization for a pilot</li>
+      <li>A distribution co-founder</li>
+      <li>Continued Agnic partnership as merchant coverage grows</li>
+    </ul>
+    <p class="big-close"><strong>Autonomous commerce with a conscience — for the generation that needs it most.</strong></p>
+    <img class="qr" src="qr.svg" alt="Scan to open EasyPace" />
+    <span class="brandfoot">EasyPace — Sage · easypace-sage.pages.dev</span><span class="num">09</span>
+  </section>
+
+</div>
+<div class="hint">← → arrow keys to navigate · Ctrl/Cmd+P to export PDF</div>
+<script>
+  const secs=[...document.querySelectorAll('section')];let i=0;
+  function go(n){i=Math.max(0,Math.min(secs.length-1,n));secs[i].scrollIntoView({behavior:'smooth'});}
+  addEventListener('keydown',e=>{
+    if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();go(i+1);}
+    else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();go(i-1);}
+  });
+  const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting)i=secs.indexOf(en.target);}),{threshold:.5});
+  secs.forEach(s=>io.observe(s));
+</script>
+</body>
+</html>
