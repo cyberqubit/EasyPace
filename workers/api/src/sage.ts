@@ -150,18 +150,39 @@ export async function parseIntent(env: Env, transcript: string, userToken?: stri
   return { intent: parseIntentKeywords(transcript, approved), parsedBy: 'keywords' };
 }
 
+const pick = (arr: string[]): string => arr[Math.floor(Math.random() * arr.length)];
+
+/** Plain-language verdict, always accurate to the actual reasonCode. Multiple
+ *  phrasings per outcome so it doesn't sound robotic — but never misleading. */
 export function sageReply(code: string, merchantLabel: string, amountValue: string, capValue: string): string {
   switch (code) {
     case 'approved':
-      return `Done — I paid ${merchantLabel} $${amountValue} for you. That was within the limits you set.`;
+      return pick([
+        `Done — I paid ${merchantLabel} $${amountValue} for you. That was within the limits you set.`,
+        `All set! I've paid ${merchantLabel} $${amountValue}, right within your limits.`,
+        `Taken care of — $${amountValue} to ${merchantLabel}, just as you allowed.`,
+      ]);
     case 'wrong_merchant':
-      return `I stopped this. ${merchantLabel} is not one of your approved places, so I did not pay. If someone is pressuring you to pay, it may be a scam.`;
+      return pick([
+        `I stopped this. ${merchantLabel} is not one of your approved places, so I did not pay. If someone is pressuring you to pay, it may be a scam.`,
+        `I did not pay ${merchantLabel} — it isn't on your approved list. When someone pressures you to pay quickly, that's often a scam.`,
+        `Hold on — ${merchantLabel} isn't a place you approved, so I refused. Please be careful; this can be a scam.`,
+      ]);
     case 'over_limit':
-      return `I did not pay this. It is $${amountValue}, but your limit is $${capValue} per purchase. If this is right, you can approve it yourself.`;
+      return pick([
+        `I did not pay this. It is $${amountValue}, but your limit is $${capValue} per purchase. If this is right, you can approve it yourself.`,
+        `That's $${amountValue}, above your $${capValue} limit, so I held it. You can approve it yourself if it's correct.`,
+      ]);
     case 'expired':
-      return `I did not use that — your approval had expired, so I asked for a fresh one to keep you safe.`;
+      return pick([
+        `I did not use that — your approval had expired, so I asked for a fresh one to keep you safe.`,
+        `That approval was out of date, so I didn't use it. I'll get a fresh one to keep you safe.`,
+      ]);
     case 'forged_signature':
-      return `I blocked this — the request was not properly signed, so it could not be trusted.`;
+      return pick([
+        `I blocked this — the request was not properly signed, so it could not be trusted.`,
+        `I blocked it — this request wasn't properly signed, so I couldn't trust it.`,
+      ]);
     default:
       return `I could not safely complete that, so I did nothing.`;
   }

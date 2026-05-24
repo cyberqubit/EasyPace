@@ -8,6 +8,10 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      // Self-destroying SW: unregisters any previously-installed service worker
+      // and clears its caches, so users always load the freshest deploy. We rely
+      // on hashed asset filenames (not a precache) for versioning — no stale UI.
+      selfDestroying: true,
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
