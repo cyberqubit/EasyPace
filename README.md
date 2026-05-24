@@ -30,7 +30,7 @@ Every time Sage tries to pay, two credentials are checked by [`@agnic/mandate-ve
 | **IntentMandateTemplate** | the senior's standing scope (categories, per-tx cap, merchant whitelist), signed by their device |
 | **IntentMandateDerivation** | one specific transaction (merchant, amount, category), scope-contained against the template |
 
-The verifier (running on a Cloudflare Worker as a `did:web` issuer + verifier) confirms signatures, expiry, scope containment, and merchant/amount/category — and returns a plain-language verdict that Sage reads aloud.
+The verifier (running on a Cloudflare Worker as a `did:web` issuer + verifier) confirms signatures, expiry, scope containment, and merchant/amount/category — and returns a plain-language verdict that Sage reads aloud. The senior can **just talk** — *"refill my heart medication"* — and Sage understands it via the **Agnic AI Gateway** before running it through the verifier.
 
 ### The five demonstrations
 
@@ -46,11 +46,18 @@ The verifier (running on a Cloudflare Worker as a `did:web` issuer + verifier) c
 
 The verifier caches the issuer's public DID document, so it makes **zero issuer calls at verification time**. Cut the issuer server off mid-demo — Sage *still* approves the legitimate purchase and *still* blocks the scam, from cache. Issuer downtime can never strand a senior or wave a fraud through.
 
+### More that makes it real
+
+- **🎤 Talk to Sage** — speak naturally ("pay my City Hydro bill"); speech→text in the browser, understood via the **Agnic AI Gateway** (real, settled calls), then verified. Falls back to deterministic keyword matching if the gateway is unavailable.
+- **⚙️ Family-controlled permissions** — an in-app panel lets the family set the per-purchase limit and toggle approved providers; changes drive the verifier **live** (lower the limit → the next payment is held; add a provider → Sage learns to pay it).
+- **🧠 Choose the AI model** — optional picker over Agnic's live model catalog; defaults to a safe Gemini model.
+- **🔑 Sign in with Agnic** (OAuth 2.0 + PKCE) — so a user can act on their own Agnic wallet and balance; built and deployed, pending Agnic OAuth-client approval.
+
 ## Accessibility is a build gate, not a feature
 
 The UI is built to research-backed senior-accessibility rules (WCAG 2.2, leaning AAA):
 - Body text ≥ 20px, **7:1 contrast**, touch targets ≥ 48px, persistent labels, clear focus rings
-- **Voice read-aloud** of every verdict (Web Speech API), one primary action per screen, plain language (no "prompt"/"token"/"mandate" jargon shown to the user)
+- **Voice both ways** (Web Speech API): speak to Sage (speech-to-text) and Sage reads every verdict aloud — one primary action per screen, plain language (no "prompt"/"token"/"mandate" jargon shown to the user)
 
 ## Architecture
 
@@ -65,8 +72,9 @@ React web app (Cloudflare Pages)      Cloudflare Worker (Hono)
 - **Frontend:** React + TypeScript (Vite) — Cloudflare Pages; always served fresh (no stale cache)
 - **Backend:** Hono on Cloudflare Workers (`nodejs_compat`)
 - **Trust core:** `@agnic/mandate-verifier` (offline SD-JWT-VC verifier), `jose`
+- **AI + auth:** Agnic AI Gateway (natural-language understanding) + Agnic OAuth (sign-in); Cloudflare KV for sessions
 - **Identity:** Agnic ERC-8004 agent #5085 (Base Sepolia), `did:web` issuer
-- **Cost to run:** $0 (Cloudflare free tier; verifier makes no paid calls)
+- **Cost to run:** ~$0 — Cloudflare free tier; the verifier makes no paid calls. Natural-language voice uses the Agnic AI Gateway (real settled calls, fractions of a cent each).
 
 ## Run locally
 
@@ -86,8 +94,11 @@ Then open the printed local URL and try the scenarios, including the "issuer onl
 
 - `GET  /.well-known/did.json` — issuer DID document
 - `GET  /api/mandate` — the senior's standing authorization
-- `POST /api/demo/:scenario` — run a scenario (`approved`, `scam-merchant`, `over-limit`, `expired`, `impostor`); `?offline=true` for the finale
+- `POST /api/demo/:scenario` — run a scenario (`approved`, `scam-merchant`, `over-limit`, `expired`, `impostor`); accepts an optional edited `{ scope }`; `?offline=true` for the finale
 - `POST /api/verify` — verify a raw `{ template, derivation, expected }` bundle
+- `POST /api/sage/ask` — natural-language request → intent → verify (`{ transcript, scope?, model? }`)
+- `GET  /api/models` — available AI models (curated subset of Agnic's live catalog)
+- `GET  /api/auth/login` · `/callback` · `/me` · `POST /api/auth/logout` — Sign in with Agnic (OAuth 2.0 + PKCE)
 
 ## License
 
