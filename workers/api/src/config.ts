@@ -93,6 +93,4 @@ export interface Env {
   FRONTEND_ORIGIN?: string;
   /** KV namespace for OAuth state + session tokens. */
   SESSIONS: KVNamespace;
-  /** Optional Cloudflare rate-limiter for the LLM endpoint. */
-  RL_ASK?: { limit: (opts: { key: string }) => Promise<{ success: boolean }> };
 }

@@ -145,11 +145,6 @@ app.post('/api/sage/ask', async (c) => {
   const body = await c.req.json().catch(() => ({}));
   const transcript = typeof body.transcript === 'string' ? body.transcript.trim().slice(0, 500) : '';
   if (!transcript) return c.json({ understood: false, sageSays: 'I didn’t hear anything — please try again.', parsedBy: 'keywords' }, 400);
-  if (c.env.RL_ASK) {
-    const ip = c.req.header('cf-connecting-ip') ?? c.req.header('x-forwarded-for') ?? 'anon';
-    const { success } = await c.env.RL_ASK.limit({ key: ip });
-    if (!success) return c.json({ understood: false, sageSays: 'One moment please — too many requests just now. Please try again shortly.', parsedBy: 'keywords' }, 429);
-  }
   try {
     const userToken = (await userTokenFromRequest(c)) ?? undefined;
     const scope = parseScope(body?.scope);
