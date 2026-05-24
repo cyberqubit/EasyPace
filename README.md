@@ -55,14 +55,14 @@ The UI is built to research-backed senior-accessibility rules (WCAG 2.2, leaning
 ## Architecture
 
 ```
-React PWA (Cloudflare Pages)          Cloudflare Worker (Hono)
+React web app (Cloudflare Pages)      Cloudflare Worker (Hono)
   Sage UI · voice · a11y     ──HTTPS──▶  did:web issuer + mandate verifier
   easypace-sage.pages.dev               @agnic/mandate-verifier (SD-JWT-VC, did:web,
                                          Bitstring Status List) + offline cache
                                          easypace-api.inboxtoronto.workers.dev
 ```
 
-- **Frontend:** React + TypeScript PWA, Vite, vite-plugin-pwa — Cloudflare Pages
+- **Frontend:** React + TypeScript (Vite) — Cloudflare Pages; always served fresh (no stale cache)
 - **Backend:** Hono on Cloudflare Workers (`nodejs_compat`)
 - **Trust core:** `@agnic/mandate-verifier` (offline SD-JWT-VC verifier), `jose`
 - **Identity:** Agnic ERC-8004 agent #5085 (Base Sepolia), `did:web` issuer
@@ -76,7 +76,7 @@ npm install
 # Terminal 1 — verifier Worker (needs workers/api/.dev.vars with ISSUER_PRIVATE_JWK)
 cd workers/api && npx wrangler dev --port 8787
 
-# Terminal 2 — PWA (proxies /api to the Worker)
+# Terminal 2 — web app (proxies /api to the Worker)
 cd apps/web && npm run dev
 ```
 
