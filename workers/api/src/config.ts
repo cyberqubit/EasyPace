@@ -40,7 +40,16 @@ export const MARGARET_SCOPE = {
 export const MERCHANT_LABELS: Record<string, string> = {
   'sunrise-pharmacy': 'Sunrise Pharmacy',
   'fresh-grocer': 'Fresh Grocer',
+  'city-hydro': 'City Hydro',
   'cra-collections': '"Canada Revenue Agency" (unknown caller)',
+};
+
+/** Category for each known provider — used to build the parser's awareness of
+ *  the senior's approved places and to set the right category on a payment. */
+export const PROVIDER_CATEGORY: Record<string, string> = {
+  'sunrise-pharmacy': 'pharmacy',
+  'fresh-grocer': 'grocery',
+  'city-hydro': 'utility',
 };
 
 /** Convert a did:web identifier to its DID-document URL. */

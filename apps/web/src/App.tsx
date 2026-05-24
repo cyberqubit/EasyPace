@@ -17,11 +17,13 @@ const ACTIONS: Action[] = [
 ];
 
 const PROVIDERS = [
-  { id: 'sunrise-pharmacy', label: 'Sunrise Pharmacy' },
-  { id: 'fresh-grocer', label: 'Fresh Grocer' },
-  { id: 'city-hydro', label: 'City Hydro (utility bill)' },
+  { id: 'sunrise-pharmacy', label: 'Sunrise Pharmacy', category: 'pharmacy' },
+  { id: 'fresh-grocer', label: 'Fresh Grocer', category: 'grocery' },
+  { id: 'city-hydro', label: 'City Hydro (utility bill)', category: 'utility' },
 ];
 const labelFor = (id: string) => PROVIDERS.find((p) => p.id === id)?.label ?? id;
+const categoriesFor = (whitelist: string[]) =>
+  [...new Set(whitelist.map((id) => PROVIDERS.find((p) => p.id === id)?.category).filter(Boolean) as string[])];
 
 interface Display {
   sageSays: string;
@@ -144,12 +146,12 @@ export function App() {
                 {PROVIDERS.map((p) => (
                   <label key={p.id} className="provider">
                     <input type="checkbox" checked={scope.merchant_whitelist.includes(p.id)}
-                      onChange={(e) => setScope({
-                        ...scope,
-                        merchant_whitelist: e.target.checked
+                      onChange={(e) => {
+                        const wl = e.target.checked
                           ? [...scope.merchant_whitelist, p.id]
-                          : scope.merchant_whitelist.filter((m) => m !== p.id),
-                      })} />
+                          : scope.merchant_whitelist.filter((m) => m !== p.id);
+                        setScope({ ...scope, merchant_whitelist: wl, categories: categoriesFor(wl) });
+                      }} />
                     <span>{p.label}</span>
                   </label>
                 ))}

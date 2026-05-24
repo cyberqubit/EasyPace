@@ -11,7 +11,19 @@
  */
 import { mintTemplate, mintDerivation, type Money, type MandateScope } from './issuer.js';
 import { verifyBundle } from './verify.js';
-import { MARGARET_SCOPE, MERCHANT_LABELS, type Env } from './config.js';
+import { MARGARET_SCOPE, MERCHANT_LABELS, PROVIDER_CATEGORY, type Env } from './config.js';
+
+interface ApprovedMerchant { id: string; label: string; category: string }
+
+/** Keyword hints per provider for the no-LLM fallback parser. */
+const PROVIDER_KEYWORDS: Record<string, RegExp> = {
+  'sunrise-pharmacy': /prescription|pharmacy|medication|medicine|refill|drug|pills/,
+  'fresh-grocer': /grocer|groceries|food|supermarket|milk|bread/,
+  'city-hydro': /hydro|electric|electricity|utility|power|\bbill\b/,
+};
+
+/** Representative amount per category when none is spoken (kept under a typical cap). */
+const DEFAULT_AMOUNT: Record<string, number> = { pharmacy: 32, grocery: 25, utility: 45, other: 20 };
 
 export interface SageIntent {
   understood: boolean;
@@ -58,29 +70,33 @@ function wordsToAmount(text: string): number | null {
   return null;
 }
 
-/** Deterministic fallback parser — covers the core demo phrases with zero deps. */
-export function parseIntentKeywords(transcript: string): SageIntent {
+/** Deterministic fallback parser — scope-aware (matches the senior's approved providers). */
+export function parseIntentKeywords(transcript: string, approved: ApprovedMerchant[]): SageIntent {
   const t = transcript.toLowerCase();
   const amt = wordsToAmount(t);
 
+  // Scam pattern → an unknown payee (will be blocked by the verifier).
   if (/\bcra\b|revenue agency|\btax(es)?\b|gift card|arrest|medicare/.test(t)) {
     const label = MERCHANT_LABELS['cra-collections'];
-    return { understood: true, merchantId: 'cra-collections', merchantLabel: label, amount: money(amt ?? 40), category: 'tax', restate: `Pay ${label} $${(amt ?? 40).toFixed(2)}` };
+    return { understood: true, merchantId: 'cra-collections', merchantLabel: label, amount: money(amt ?? 40), category: 'other', restate: `Pay ${label} $${(amt ?? 40).toFixed(2)}` };
   }
-  if (/prescription|pharmacy|medication|medicine|refill|drug/.test(t)) {
-    return { understood: true, merchantId: 'sunrise-pharmacy', merchantLabel: 'Sunrise Pharmacy', amount: money(amt ?? 32), category: 'pharmacy', restate: `Pay Sunrise Pharmacy $${(amt ?? 32).toFixed(2)}` };
-  }
-  if (/grocer|groceries|food|supermarket/.test(t)) {
-    return { understood: true, merchantId: 'fresh-grocer', merchantLabel: 'Fresh Grocer', amount: money(amt ?? 25), category: 'grocery', restate: `Pay Fresh Grocer $${(amt ?? 25).toFixed(2)}` };
+  // Match against the user's actual approved providers.
+  for (const m of approved) {
+    const re = PROVIDER_KEYWORDS[m.id];
+    if (re && re.test(t)) {
+      const value = amt ?? DEFAULT_AMOUNT[m.category] ?? 20;
+      return { understood: true, merchantId: m.id, merchantLabel: m.label, amount: money(value), category: m.category, restate: `Pay ${m.label} $${value.toFixed(2)}` };
+    }
   }
   return { understood: false, merchantId: '', merchantLabel: '', amount: money(0), category: '', restate: '' };
 }
 
 /** Agnic AI Gateway (Gemini) intent parser. Returns null on any failure so the caller falls back. */
-async function parseIntentLLM(env: Env, transcript: string, token: string, model: string): Promise<SageIntent | null> {
+async function parseIntentLLM(env: Env, transcript: string, token: string, model: string, approved: ApprovedMerchant[], cap: string): Promise<SageIntent | null> {
+  const list = approved.map((m) => `"${m.id}" (label "${m.label}", category "${m.category}")`).join('; ') || '(none)';
   const system = `You are Sage, an assistant for a senior. Convert the user's spoken request into a JSON payment intent.
-Approved merchants: "sunrise-pharmacy" (label "Sunrise Pharmacy", category pharmacy), "fresh-grocer" (label "Fresh Grocer", category grocery). Per-purchase limit: $${MARGARET_SCOPE.max_per_tx.value} CAD.
-If the request matches an approved merchant, use its id/label/category. If it's anyone else (tax/CRA/gift-card/unknown payee), set merchantId to a short slug, give a human merchantLabel, and category "other".
+Approved merchants the user can pay: ${list}. Per-purchase limit: $${cap} CAD.
+If the request clearly matches an approved merchant, use its EXACT id, label, and category from that list. If it's anyone else (tax/CRA/gift-card/unknown payee), set merchantId to a short slug, give a human merchantLabel, and category "other".
 Output ONLY minified JSON: {"understood":bool,"merchantId":str,"merchantLabel":str,"amount":{"value":"0.00","currency":"CAD"},"category":str,"restate":str}. If you can't tell what they want, set understood=false.`;
 
   const headers: Record<string, string> = {
@@ -113,19 +129,25 @@ Output ONLY minified JSON: {"understood":bool,"merchantId":str,"merchantLabel":s
   return parsed;
 }
 
-export async function parseIntent(env: Env, transcript: string, userToken?: string, model?: string): Promise<{ intent: SageIntent; parsedBy: SageAnswer['parsedBy'] }> {
+export async function parseIntent(env: Env, transcript: string, userToken?: string, model?: string, scope?: MandateScope): Promise<{ intent: SageIntent; parsedBy: SageAnswer['parsedBy'] }> {
+  const activeScope = scope ?? MARGARET_SCOPE;
+  const approved: ApprovedMerchant[] = activeScope.merchant_whitelist.map((id) => ({
+    id, label: MERCHANT_LABELS[id] ?? id, category: PROVIDER_CATEGORY[id] ?? 'other',
+  }));
+  const cap = activeScope.max_per_tx.value;
+
   // Prefer the signed-in user's token (bills their wallet, $5 credit), else our API token.
   const token = userToken ?? env.AGNIC_API_TOKEN;
   const chosenModel = model || env.AGNIC_MODEL || DEFAULT_MODEL;
   if (token) {
     try {
-      const llm = await parseIntentLLM(env, transcript, token, chosenModel);
+      const llm = await parseIntentLLM(env, transcript, token, chosenModel, approved, cap);
       if (llm) return { intent: llm, parsedBy: 'agnic-gateway' };
     } catch {
       /* fall through to keywords */
     }
   }
-  return { intent: parseIntentKeywords(transcript), parsedBy: 'keywords' };
+  return { intent: parseIntentKeywords(transcript, approved), parsedBy: 'keywords' };
 }
 
 export function sageReply(code: string, merchantLabel: string, amountValue: string, capValue: string): string {
@@ -146,7 +168,7 @@ export function sageReply(code: string, merchantLabel: string, amountValue: stri
 }
 
 export async function askSage(env: Env, transcript: string, offline = false, userToken?: string, scope?: MandateScope, model?: string): Promise<SageAnswer> {
-  const { intent, parsedBy } = await parseIntent(env, transcript, userToken, model);
+  const { intent, parsedBy } = await parseIntent(env, transcript, userToken, model, scope);
 
   if (!intent.understood) {
     return {
@@ -160,7 +182,7 @@ export async function askSage(env: Env, transcript: string, offline = false, use
   // If no amount was stated ("grab my medication"), use a representative amount
   // for the category — in production this comes from the merchant's bill/invoice.
   if (!intent.amount || Number(intent.amount.value) <= 0) {
-    const def = intent.category === 'grocery' ? 25 : intent.category === 'pharmacy' ? 32 : 20;
+    const def = DEFAULT_AMOUNT[intent.category] ?? 20;
     intent.amount = { value: def.toFixed(2), currency: 'CAD' };
     intent.restate = `Pay ${intent.merchantLabel} $${def.toFixed(2)}`;
   }
