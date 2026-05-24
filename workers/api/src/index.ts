@@ -30,7 +30,11 @@ function parseScope(raw: unknown): MandateScope | undefined {
   const cap = (s.max_per_tx ?? {}) as { value?: unknown; currency?: unknown };
   return {
     categories: Array.isArray(s.categories) ? (s.categories as unknown[]).map(String) : [...base.categories],
-    merchant_whitelist: Array.isArray(s.merchant_whitelist) ? (s.merchant_whitelist as unknown[]).map(String) : [...base.merchant_whitelist],
+    // Security: an EMPTY whitelist must mean "deny all" (not "allow any" — the verifier's
+    // default). Explicit empty -> a sentinel that matches nothing; absent -> the defaults.
+    merchant_whitelist: Array.isArray(s.merchant_whitelist)
+      ? ((s.merchant_whitelist as unknown[]).length > 0 ? (s.merchant_whitelist as unknown[]).map(String) : ['__no_approved_merchants__'])
+      : [...base.merchant_whitelist],
     max_per_tx: {
       value: typeof cap.value === 'string' || typeof cap.value === 'number' ? String(cap.value) : base.max_per_tx.value,
       currency: typeof cap.currency === 'string' ? cap.currency : base.max_per_tx.currency,
@@ -40,7 +44,15 @@ function parseScope(raw: unknown): MandateScope | undefined {
 
 const app = new Hono<{ Bindings: Env }>();
 
-app.use('*', cors());
+// Restrict CORS to our own origins (Pages prod + previews + local dev); blocks
+// arbitrary third-party browser origins from abusing the API / draining credit.
+app.use('*', cors({
+  origin: (origin) => {
+    if (!origin) return '*';
+    if (origin.endsWith('.pages.dev') || origin.startsWith('http://localhost')) return origin;
+    return '';
+  },
+}));
 
 app.route('/api/auth', auth);
 
@@ -115,12 +127,13 @@ app.post('/api/demo/:scenario', async (c) => {
 app.post('/api/sage/ask', async (c) => {
   const offline = c.req.query('offline') === 'true';
   const body = await c.req.json().catch(() => ({}));
-  const transcript = typeof body.transcript === 'string' ? body.transcript.trim() : '';
+  const transcript = typeof body.transcript === 'string' ? body.transcript.trim().slice(0, 500) : '';
   if (!transcript) return c.json({ understood: false, sageSays: 'I didn’t hear anything — please try again.', parsedBy: 'keywords' }, 400);
   try {
     const userToken = (await userTokenFromRequest(c)) ?? undefined;
     const scope = parseScope(body?.scope);
-    const model = typeof body?.model === 'string' ? body.model : undefined;
+    // Only allow a model from our curated list; ignore arbitrary caller-supplied model ids.
+    const model = typeof body?.model === 'string' && CURATED_MODELS.some((m) => m.id === body.model) ? body.model : undefined;
     return c.json(await askSage(c.env, transcript, offline, userToken, scope, model));
   } catch (err) {
     return c.json({ understood: false, sageSays: 'Something went wrong on my side — let’s try again.', error: err instanceof Error ? err.message : 'error', parsedBy: 'keywords' }, 500);

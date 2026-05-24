@@ -124,6 +124,30 @@ export interface VerifyOutcome extends IntentBundleCheck {
   reasonText: string;
 }
 
+function emptyChecks(): VerifyOutcome['checks'] {
+  return { template_signature: false, derivation_signature: false, parent_match: false, not_expired: false, amount_in_scope: false, merchant_in_scope: false, categories_in_scope: false };
+}
+
+/**
+ * Security preflight before crypto verification:
+ *  - Pin the issuer to env.ISSUER_DID — blocks did:web substitution / SSRF via a forged `iss`
+ *    (the package resolves the issuer key from the unverified `iss` claim otherwise).
+ *  - Reject unexpected SD-JWT disclosures — our issuer emits none, and disclosures are NOT
+ *    covered by the signature, so an appended orphan disclosure could override the signed scope.
+ */
+function preflight(templateSdJwt: string, derivationSdJwt: string, env: Env): string | null {
+  for (const [name, sdJwt] of [['template', templateSdJwt], ['derivation', derivationSdJwt]] as const) {
+    const parts = sdJwt.split('~');
+    if (parts.slice(1).some((p) => p.length > 0)) return `${name}: unexpected disclosures rejected`;
+    try {
+      if (decodeJwt(parts[0]).iss !== env.ISSUER_DID) return `${name}: untrusted issuer`;
+    } catch {
+      return `${name}: unparseable credential`;
+    }
+  }
+  return null;
+}
+
 export async function verifyBundle(
   env: Env,
   templateSdJwt: string,
@@ -131,6 +155,10 @@ export async function verifyBundle(
   expected: ExpectedOrder,
   offline = false,
 ): Promise<VerifyOutcome> {
+  const blocked = preflight(templateSdJwt, derivationSdJwt, env);
+  if (blocked) {
+    return { valid: false, checks: emptyChecks(), reasons: [blocked], offline, issuerContacted: false, reasonCode: 'forged_signature', reasonText: REASON_TEXT.forged_signature };
+  }
   const { fetch: cachingFetch, issuerContacted } = makeCachingFetch(env, offline);
   const result = await verifyIntentBundle(templateSdJwt, derivationSdJwt, expected, {
     fetch: cachingFetch,

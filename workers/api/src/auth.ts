@@ -56,7 +56,7 @@ export async function userTokenFromRequest(c: Ctx): Promise<string | null> {
       const r = await fetch(`${AGNIC}/oauth/token`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ grant_type: 'refresh_token', refresh_token: s.refresh_token, client_id: c.env.AGNIC_CLIENT_ID }),
+        body: JSON.stringify({ grant_type: 'refresh_token', refresh_token: s.refresh_token, client_id: c.env.AGNIC_CLIENT_ID, client_secret: c.env.AGNIC_CLIENT_SECRET }),
       });
       if (r.ok) {
         const t = (await r.json()) as { access_token: string; refresh_token?: string; expires_in?: number };
