@@ -39,6 +39,25 @@ app.use('*', cors());
 
 app.route('/api/auth', auth);
 
+app.get('/', (c) =>
+  c.html(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EasyPace — Sage Verifier API</title>
+<style>body{font-family:system-ui,Arial,sans-serif;max-width:640px;margin:3rem auto;padding:0 1.25rem;line-height:1.6;color:#16261d}a{color:#1b4332}code{background:#f1f7f3;padding:.1rem .35rem;border-radius:6px}h1{font-size:1.6rem}</style></head>
+<body>
+<h1>🌿 EasyPace — Sage Verifier API</h1>
+<p>This is the backend that verifies whether a payment is within the limits a senior signed. <strong>Try the app:</strong></p>
+<p>👉 <a href="https://easypace-sage.pages.dev">easypace-sage.pages.dev</a></p>
+<h2>Endpoints</h2>
+<ul>
+<li><code>GET /health</code></li>
+<li><code>GET /.well-known/did.json</code></li>
+<li><code>GET /api/mandate</code> · <code>GET /api/models</code></li>
+<li><code>POST /api/demo/:scenario</code> (?offline=true)</li>
+<li><code>POST /api/sage/ask</code> · <code>POST /api/verify</code></li>
+</ul>
+<p>Code: <a href="https://github.com/cyberqubit/EasyPace">github.com/cyberqubit/EasyPace</a> · Agnic "Agentic Commerce Pioneers" — Trust track.</p>
+</body></html>`),
+);
+
 app.get('/health', (c) => c.json({ ok: true, service: 'easypace-sage-verifier' }));
 
 app.get('/.well-known/did.json', (c) => c.json(didDocument(c.env.ISSUER_DID)));
