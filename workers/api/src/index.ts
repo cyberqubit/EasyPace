@@ -17,29 +17,45 @@ import { verifyBundle } from './verify.js';
 import { askSage, CURATED_MODELS, DEFAULT_MODEL } from './sage.js';
 import { auth, userTokenFromRequest } from './auth.js';
 import type { MandateScope } from './issuer.js';
+import { PROVIDER_CATEGORY } from './config.js';
+
+const KNOWN_MERCHANTS = new Set(Object.keys(PROVIDER_CATEGORY));
+const KNOWN_CATEGORIES = new Set(Object.values(PROVIDER_CATEGORY));
+const MAX_CAP = 500; // server-enforced ceiling — the client may tighten scope, never inflate it
 
 /**
- * Parse a caller-supplied mandate scope, MERGING any provided fields over the
- * defaults — so a partial scope (e.g. just a lower max_per_tx) is honoured
- * rather than silently ignored. Returns undefined only when no scope is sent.
+ * Parse a caller-supplied mandate scope, BOUNDED by server policy so it can never
+ * be used to approve arbitrary merchants or amounts (scope-injection defense):
+ *  - merchant_whitelist: keep only server-known providers; unknown ids are dropped;
+ *    an empty result becomes a deny-all sentinel (never "allow any").
+ *  - categories: only server-known categories.
+ *  - max_per_tx: clamped to [0, MAX_CAP].
+ * Returns undefined only when no scope is sent (→ default MARGARET_SCOPE).
  */
 function parseScope(raw: unknown): MandateScope | undefined {
   if (!raw || typeof raw !== 'object') return undefined;
   const s = raw as Record<string, unknown>;
   const base = MARGARET_SCOPE;
+
+  let merchant_whitelist: string[] = [...base.merchant_whitelist];
+  if (Array.isArray(s.merchant_whitelist)) {
+    merchant_whitelist = (s.merchant_whitelist as unknown[]).map(String).filter((id) => KNOWN_MERCHANTS.has(id));
+    if (merchant_whitelist.length === 0) merchant_whitelist = ['__no_approved_merchants__'];
+  }
+
+  let categories: string[] = [...base.categories];
+  if (Array.isArray(s.categories)) {
+    categories = (s.categories as unknown[]).map(String).filter((c) => KNOWN_CATEGORIES.has(c));
+  }
+
   const cap = (s.max_per_tx ?? {}) as { value?: unknown; currency?: unknown };
-  return {
-    categories: Array.isArray(s.categories) ? (s.categories as unknown[]).map(String) : [...base.categories],
-    // Security: an EMPTY whitelist must mean "deny all" (not "allow any" — the verifier's
-    // default). Explicit empty -> a sentinel that matches nothing; absent -> the defaults.
-    merchant_whitelist: Array.isArray(s.merchant_whitelist)
-      ? ((s.merchant_whitelist as unknown[]).length > 0 ? (s.merchant_whitelist as unknown[]).map(String) : ['__no_approved_merchants__'])
-      : [...base.merchant_whitelist],
-    max_per_tx: {
-      value: typeof cap.value === 'string' || typeof cap.value === 'number' ? String(cap.value) : base.max_per_tx.value,
-      currency: typeof cap.currency === 'string' ? cap.currency : base.max_per_tx.currency,
-    },
-  };
+  let value: string = base.max_per_tx.value;
+  if (cap.value !== undefined) {
+    const n = Number(cap.value);
+    value = Number.isFinite(n) ? Math.max(0, Math.min(MAX_CAP, n)).toFixed(2) : base.max_per_tx.value;
+  }
+
+  return { categories, merchant_whitelist, max_per_tx: { value, currency: typeof cap.currency === 'string' ? cap.currency : base.max_per_tx.currency } };
 }
 
 const app = new Hono<{ Bindings: Env }>();
