@@ -20,6 +20,13 @@ AGNIC_REDIRECT_URI = "https://easypace-api.inboxtoronto.workers.dev/api/auth/cal
 binding = "SESSIONS"
 id = "32b03c1593ec49c3ba430be327db544b"
 
+# Rate limiter for /api/sage/ask (protects the Agnic LLM budget from abuse).
+[[unsafe.bindings]]
+name = "RL_ASK"
+type = "ratelimit"
+namespace_id = "2001"
+simple = { limit = 15, period = 60 }
+
 # Secret (NOT committed) — set for local dev in workers/api/.dev.vars,
 # and for production with:  wrangler secret put ISSUER_PRIVATE_JWK
 # ISSUER_PRIVATE_JWK = '{"kty":"EC",...}'
