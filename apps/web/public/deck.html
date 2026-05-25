@@ -14,6 +14,7 @@
   body{
     font-family:'Inter',-apple-system,Segoe UI,Arial,sans-serif;
     color:var(--ink); background:var(--bg);
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
   }
   .deck{height:100vh;overflow-y:scroll;scroll-snap-type:y mandatory;scroll-behavior:smooth}
   section{
@@ -33,10 +34,9 @@
   .num{position:absolute;right:9vw;bottom:5vh;font-size:.95rem;color:var(--muted)}
   .brandfoot{position:absolute;left:9vw;bottom:5vh;font-size:.95rem;color:var(--muted);font-weight:700}
   .hint{position:fixed;right:14px;bottom:12px;font-size:.8rem;color:#8aa;opacity:.7}
-  /* visual placeholder for screenshots */
-  .shot{margin-top:1.4rem;border:2px dashed var(--line);border-radius:16px;padding:1.4rem 1.6rem;
-        color:var(--muted);font-size:1rem;background:#f1f7f3;max-width:60ch}
-  .shot b{color:var(--green)}
+  .chips{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1.6rem}
+  .chip{font-size:1.05rem;font-weight:700;color:var(--green);background:#e6f4ea;
+        border:1px solid var(--soft);border-radius:999px;padding:.55rem 1.15rem}
   .row{display:flex;gap:2rem;flex-wrap:wrap;margin-top:1.2rem}
   .stat{font-size:clamp(1.6rem,3.5vw,2.6rem);font-weight:800;color:var(--green)}
   .stat span{display:block;font-size:1rem;font-weight:500;color:var(--muted);margin-top:.2rem}
@@ -95,7 +95,11 @@
       <li class="block">Scam call · over-limit · expired · forged → blocked.</li>
       <li class="ok">Seniors stay independent · families get peace of mind · scammers shut out.</li>
     </ul>
-    <div class="shot"><b>📱 Screenshot:</b> the Sage home screen (mic + permissions card). <br><i>Replace this box with: &lt;img src="shot-home.png"&gt;</i></div>
+    <div class="chips">
+      <span class="chip">Independence</span>
+      <span class="chip">Family peace of mind</span>
+      <span class="chip">Scammers shut out</span>
+    </div>
     <span class="brandfoot">EasyPace — Sage</span><span class="num">03</span>
   </section>
 
@@ -110,7 +114,7 @@
       <li>Take the server offline → Sage still works from cache</li>
       <li>A verified, on-chain digital identity for the agent</li>
     </ul>
-    <p class="sub">— drive the live app / video here —</p>
+    <p class="sub">Live in the room — or watch the 2-minute demo video.</p>
     <span class="brandfoot">EasyPace — Sage</span><span class="num">04</span>
   </section>
 
@@ -173,6 +177,7 @@
       <li>Continued Agnic partnership as merchant coverage grows</li>
     </ul>
     <p class="big-close"><strong>Autonomous commerce with a conscience — for the generation that needs it most.</strong></p>
+    <p class="sub">⚡ Powered by Agnic</p>
     <img class="qr" src="qr.svg" alt="Scan to open EasyPace" />
     <span class="brandfoot">EasyPace — Sage · easypace-sage.pages.dev</span><span class="num">09</span>
   </section>
