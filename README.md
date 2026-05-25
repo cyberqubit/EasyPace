@@ -6,6 +6,7 @@ Sage pays, books, and shops on a senior's behalf — but every transaction is cr
 > Agnic "Agentic Commerce Pioneers" Hackathon · **Track: Agents You Can Trust**
 
 🔗 **Live demo:** https://easypace-sage.pages.dev
+🖥️ **Pitch deck:** https://easypace-sage.pages.dev/deck
 🔗 **Verifier API:** https://easypace-api.inboxtoronto.workers.dev
 🪪 **On-chain agent identity (ERC-8004):** Agnic agent **#5085** (Base Sepolia)
 
@@ -58,6 +59,22 @@ The verifier caches the issuer's public DID document, so it makes **zero issuer 
 The UI is built to research-backed senior-accessibility rules (WCAG 2.2, leaning AAA):
 - Body text ≥ 20px, **7:1 contrast**, touch targets ≥ 48px, persistent labels, clear focus rings
 - **Voice both ways** (Web Speech API): speak to Sage (speech-to-text) and Sage reads every verdict aloud — one primary action per screen, plain language (no "prompt"/"token"/"mandate" jargon shown to the user)
+
+## Business model
+
+Free for seniors and families. EasyPace earns a small partner commission through Agnic **only when Sage completes a task** — we make money by *helping*, never by charging the people we protect. Go-to-market: channels seniors already trust (Senior Planet/OATS, public libraries) plus a "set it up for Mom" family-referral flow. Illustrative unit economics: ~$5/month per active senior → 10,000 users ≈ $600K ARR.
+
+## Security
+
+We ran a self-directed security audit — issuer substitution/SSRF, scope injection, empty-whitelist bypass, orphan-disclosure scope override, prompt injection, and cost-abuse — and **hardened against every Critical/High before submitting**: issuer pinning, server-bounded scope, disclosure rejection, input/transcript limits, model allowlisting. Known production-TODOs (revocation/status-list signature verification, a distributed rate limiter, anti-replay) are documented honestly; in a real deployment **Agnic is the independent credential issuer**, which removes the self-issued demo's trust assumptions. Note: the LLM is advisory — the cryptographic verifier is the trust anchor, so a prompt-injection's worst case is a *blocked* transaction, never an unauthorized approval.
+
+## Status (honest)
+
+Fully working live demo: natural-language voice (real, settled Agnic Gateway calls), one approval + four rejection cases, the offline-resilience finale, and a live family-controlled permissions panel. Mandates are self-issued via our own `did:web` for deterministic demonstration; the verifier is the real `@agnic/mandate-verifier`. **AI calls are real settlements; real-world _merchant_ settlement is modeled**, pending broader x402 merchant coverage. "Sign in with Agnic" is built and deployed, pending Agnic OAuth-client approval.
+
+## Team
+
+**Jose Castellanos** — built EasyPace end-to-end on Agnic. *"I watch my parents getting older and worry every time their phone rings — Sage is the protection I want for them."* Seeking a co-founder with senior-care or fintech-distribution experience.
 
 ## Architecture
 
